@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>«Тихий час» — мудборд палитр</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --serif: 'Cormorant Garamond', 'Lora', Georgia, serif;
+    --sans:  'Inter', -apple-system, system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: #0F0D0A;
+    color: #E8E0D2;
+    line-height: 1.6;
+    padding: 48px 24px;
+  }
+
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h1.title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 48px;
+    letter-spacing: 0.5px;
+    color: #E8E0D2;
+    margin-bottom: 8px;
+  }
+
+  p.subtitle {
+    color: #A39685;
+    margin-bottom: 56px;
+    font-size: 16px;
+  }
+
+  /* ---------- Variant card ---------- */
+  .variant {
+    border-radius: 12px;
+    padding: 40px;
+    margin-bottom: 32px;
+    border: 1px solid;
+  }
+
+  /* Variant A: brass on warm coal */
+  .v-brass {
+    --bg: #1F1B17;
+    --surface: #2A251F;
+    --border: #3B342C;
+    --text: #E8E0D2;
+    --muted: #A39685;
+    --accent: #B89968;
+    --accent-hover: #CCAE7E;
+    --success: #7A8471;
+    --error: #A8675F;
+    --info: #7B8B96;
+    background: var(--bg);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  /* Variant B: sage on warm coal */
+  .v-sage {
+    --bg: #1B1F1B;
+    --surface: #252B25;
+    --border: #353B33;
+    --text: #E2E6DC;
+    --muted: #95A089;
+    --accent: #8FA77E;
+    --accent-hover: #A6BB97;
+    --success: #B89968;
+    --error: #A8675F;
+    --info: #7B8B96;
+    background: var(--bg);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  /* Variant C: smoky blue on cold coal */
+  .v-steel {
+    --bg: #131619;
+    --surface: #1D2125;
+    --border: #2C323A;
+    --text: #DDE4EC;
+    --muted: #8B96A2;
+    --accent: #7B98B1;
+    --accent-hover: #9AB4CB;
+    --success: #7A8471;
+    --error: #A8675F;
+    --info: #B89968;
+    background: var(--bg);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  /* Variant D: light, cream + brass */
+  .v-light {
+    --bg: #F5F1EA;
+    --surface: #FFFFFF;
+    --border: #E5DECF;
+    --text: #2C2620;
+    --muted: #6B6258;
+    --accent: #8E7548;
+    --accent-hover: #A88958;
+    --success: #5A6B52;
+    --error: #8E5048;
+    --info: #5A6B78;
+    background: var(--bg);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  .variant h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 32px;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .variant .vlabel {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 32px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* ---------- Swatches ---------- */
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .sw {
+    border-radius: 8px;
+    padding: 16px 14px;
+    height: 96px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid var(--border);
+    font-size: 12px;
+    font-family: var(--sans);
+  }
+
+  .sw .name { font-weight: 500; }
+  .sw .hex  { opacity: 0.8; font-family: ui-monospace, 'Cascadia Code', monospace; }
+
+  /* ---------- Mock UI ---------- */
+  .mock {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+
+  .card h3 {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .card .meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+  }
+
+  .price-row:first-of-type { border-top: 0; }
+
+  .price-row .price {
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .form-row {
+    margin-bottom: 16px;
+  }
+
+  .form-row label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  .form-row input,
+  .form-row select {
+    width: 100%;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: var(--sans);
+    font-size: 14px;
+  }
+
+  .form-row input:focus,
+  .form-row select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+  }
+
+  .btn {
+    display: inline-block;
+    background: var(--accent);
+    color: #1F1B17;
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 22px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .btn:hover { background: var(--accent-hover); }
+
+  .btn.outline {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .btn.outline:hover { background: var(--accent); color: var(--bg); }
+
+  .v-light .btn { color: #FFFFFF; }
+  .v-light .btn.outline { color: var(--accent); }
+  .v-light .btn.outline:hover { color: #FFFFFF; }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .badge.success { background: rgba(122,132,113, 0.18); color: var(--success); }
+  .badge.error   { background: rgba(168,103,95,  0.18); color: var(--error); }
+  .badge.info    { background: rgba(123,139,150, 0.18); color: var(--info); }
+
+  .slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .slot {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--text);
+    background: transparent;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+  }
+  .slot:hover { border-color: var(--accent); color: var(--accent); }
+  .slot.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .h4 {
+    font-family: var(--serif);
+    font-size: 18px;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+
+  .typo-line {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .typo-sample {
+    font-family: var(--serif);
+    font-weight: 500;
+    color: var(--text);
+    font-size: 28px;
+  }
+  .typo-sample.sans {
+    font-family: var(--sans);
+    font-weight: 400;
+    font-size: 16px;
+  }
+
+  hr.sep {
+    border: 0;
+    border-top: 1px solid #2A251F;
+    margin: 64px 0 32px;
+  }
+
+  .legend {
+    color: #A39685;
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 720px) {
+    .mock { grid-template-columns: 1fr; }
+    h1.title { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1 class="title">«Тихий час» — мудборд</h1>
+  <p class="subtitle">Четыре варианта приглушённой палитры. Все примеры — реальные блоки UI: карточка услуги, форма записи, выбор слота, статусы.</p>
+
+  <!-- ============ VARIANT A: brass ============ -->
+  <section class="variant v-brass">
+    <h2>Вариант A — Латунь на тёплом угле</h2>
+    <div class="vlabel">основная рекомендация · вечерний барбершоп · классика</div>
+
+    <div class="swatches">
+      <div class="sw" style="background:#1F1B17;color:#E8E0D2;border-color:#3B342C">
+        <div class="name">Фон</div><div class="hex">#1F1B17</div>
+      </div>
+      <div class="sw" style="background:#2A251F;color:#E8E0D2;border-color:#3B342C">
+        <div class="name">Поверхность</div><div class="hex">#2A251F</div>
+      </div>
+      <div class="sw" style="background:#3B342C;color:#E8E0D2;border-color:#3B342C">
+        <div class="name">Линии</div><div class="hex">#3B342C</div>
+      </div>
+      <div class="sw" style="background:#E8E0D2;color:#1F1B17;border-color:#E8E0D2">
+        <div class="name">Текст</div><div class="hex">#E8E0D2</div>
+      </div>
+      <div class="sw" style="background:#A39685;color:#1F1B17;border-color:#A39685">
+        <div class="name">Приглушённый</div><div class="hex">#A39685</div>
+      </div>
+      <div class="sw" style="background:#B89968;color:#1F1B17;border-color:#B89968">
+        <div class="name">Акцент</div><div class="hex">#B89968</div>
+      </div>
+      <div class="sw" style="background:#7A8471;color:#1F1B17;border-color:#7A8471">
+        <div class="name">Успех</div><div class="hex">#7A8471</div>
+      </div>
+      <div class="sw" style="background:#A8675F;color:#1F1B17;border-color:#A8675F">
+        <div class="name">Ошибка</div><div class="hex">#A8675F</div>
+      </div>
+    </div>
+
+    <div class="mock">
+      <div class="card">
+        <h3>Мужская стрижка</h3>
+        <div class="meta">60 минут · опытный мастер · филиал на Красной</div>
+        <div class="price-row"><span>Стандартная</span><span class="price">1 500 ₽</span></div>
+        <div class="price-row"><span>С укладкой</span><span class="price">1 800 ₽</span></div>
+        <div class="price-row"><span>Топ-мастер</span><span class="price">2 200 ₽</span></div>
+        <div style="margin-top:20px;display:flex;gap:8px;align-items:center;">
+          <span class="badge success">Свободно сегодня</span>
+          <span class="badge info">Online-запись</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Запись онлайн</h3>
+        <div class="meta">шаг 3 из 4 · выбор времени</div>
+        <div class="form-row">
+          <label>Услуга</label>
+          <select><option>Мужская стрижка — 60 мин</option></select>
+        </div>
+        <div class="form-row">
+          <label>Мастер</label>
+          <select><option>Любой свободный</option></select>
+        </div>
+        <div class="form-row">
+          <label>Свободные слоты</label>
+          <div class="slots">
+            <button class="slot">10:00</button>
+            <button class="slot">10:30</button>
+            <button class="slot active">11:15</button>
+            <button class="slot">12:00</button>
+            <button class="slot">13:30</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:24px;">
+          <button class="btn">Подтвердить</button>
+          <button class="btn outline">Назад</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:0">
+      <div class="h4">Типографика</div>
+      <div class="typo-line"><span class="typo-sample">Тихий час · Cormorant Garamond 28</span></div>
+      <div class="typo-line"><span class="typo-sample sans">Inter 16. Спокойный текст без декоративных излишеств. Цифры табулярные: 1 234 567 ₽.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ VARIANT B: sage ============ -->
+  <section class="variant v-sage">
+    <h2>Вариант B — Шалфей на мшистом угле</h2>
+    <div class="vlabel">природа · спокойствие · растительные тона</div>
+
+    <div class="swatches">
+      <div class="sw" style="background:#1B1F1B;color:#E2E6DC;border-color:#353B33"><div class="name">Фон</div><div class="hex">#1B1F1B</div></div>
+      <div class="sw" style="background:#252B25;color:#E2E6DC;border-color:#353B33"><div class="name">Поверхность</div><div class="hex">#252B25</div></div>
+      <div class="sw" style="background:#353B33;color:#E2E6DC;border-color:#353B33"><div class="name">Линии</div><div class="hex">#353B33</div></div>
+      <div class="sw" style="background:#E2E6DC;color:#1B1F1B;border-color:#E2E6DC"><div class="name">Текст</div><div class="hex">#E2E6DC</div></div>
+      <div class="sw" style="background:#95A089;color:#1B1F1B;border-color:#95A089"><div class="name">Приглушённый</div><div class="hex">#95A089</div></div>
+      <div class="sw" style="background:#8FA77E;color:#1B1F1B;border-color:#8FA77E"><div class="name">Акцент</div><div class="hex">#8FA77E</div></div>
+      <div class="sw" style="background:#B89968;color:#1B1F1B;border-color:#B89968"><div class="name">Тёплый</div><div class="hex">#B89968</div></div>
+      <div class="sw" style="background:#A8675F;color:#1B1F1B;border-color:#A8675F"><div class="name">Ошибка</div><div class="hex">#A8675F</div></div>
+    </div>
+
+    <div class="mock">
+      <div class="card">
+        <h3>Стрижка бороды</h3>
+        <div class="meta">30 минут · окантовка · оформление</div>
+        <div class="price-row"><span>Базовая</span><span class="price">700 ₽</span></div>
+        <div class="price-row"><span>С маской</span><span class="price">950 ₽</span></div>
+        <div style="margin-top:20px;"><span class="badge success">Открыт сейчас</span></div>
+      </div>
+      <div class="card">
+        <h3>Активные записи</h3>
+        <div class="meta">Иван Петров · клиент с 2024</div>
+        <div class="price-row"><span>Сегодня · 18:00</span><span class="badge info">Подтверждена</span></div>
+        <div class="price-row"><span>16 ноября · 11:30</span><span class="badge success">Создана</span></div>
+        <div class="price-row"><span>2 ноября · 19:45</span><span class="badge error">Отменена</span></div>
+        <div style="margin-top:20px;"><button class="btn">Записаться снова</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VARIANT C: steel blue ============ -->
+  <section class="variant v-steel">
+    <h2>Вариант C — Дымчатая сталь</h2>
+    <div class="vlabel">холодный минимализм · технологичность · современность</div>
+
+    <div class="swatches">
+      <div class="sw" style="background:#131619;color:#DDE4EC;border-color:#2C323A"><div class="name">Фон</div><div class="hex">#131619</div></div>
+      <div class="sw" style="background:#1D2125;color:#DDE4EC;border-color:#2C323A"><div class="name">Поверхность</div><div class="hex">#1D2125</div></div>
+      <div class="sw" style="background:#2C323A;color:#DDE4EC;border-color:#2C323A"><div class="name">Линии</div><div class="hex">#2C323A</div></div>
+      <div class="sw" style="background:#DDE4EC;color:#131619;border-color:#DDE4EC"><div class="name">Текст</div><div class="hex">#DDE4EC</div></div>
+      <div class="sw" style="background:#8B96A2;color:#131619;border-color:#8B96A2"><div class="name">Приглушённый</div><div class="hex">#8B96A2</div></div>
+      <div class="sw" style="background:#7B98B1;color:#131619;border-color:#7B98B1"><div class="name">Акцент</div><div class="hex">#7B98B1</div></div>
+      <div class="sw" style="background:#7A8471;color:#131619;border-color:#7A8471"><div class="name">Успех</div><div class="hex">#7A8471</div></div>
+      <div class="sw" style="background:#A8675F;color:#131619;border-color:#A8675F"><div class="name">Ошибка</div><div class="hex">#A8675F</div></div>
+    </div>
+
+    <div class="mock">
+      <div class="card">
+        <h3>Дашборд филиала</h3>
+        <div class="meta">сегодня · 14 ноября</div>
+        <div class="price-row"><span>Записей за день</span><span class="price">23</span></div>
+        <div class="price-row"><span>Загрузка мастеров</span><span class="price">78%</span></div>
+        <div class="price-row"><span>Выручка прогноз</span><span class="price">42 800 ₽</span></div>
+      </div>
+      <div class="card">
+        <h3>Заявки</h3>
+        <div class="meta">требуют обработки</div>
+        <div class="price-row"><span>Алексей · +7 918 …</span><span class="badge info">Новая</span></div>
+        <div class="price-row"><span>Мария · +7 909 …</span><span class="badge info">Новая</span></div>
+        <div style="margin-top:20px;display:flex;gap:8px;"><button class="btn">Обработать</button><button class="btn outline">Позже</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VARIANT D: light ============ -->
+  <section class="variant v-light">
+    <h2>Вариант D — Светлая (крем + латунь)</h2>
+    <div class="vlabel">для дневного режима / светлой темы</div>
+
+    <div class="swatches">
+      <div class="sw" style="background:#F5F1EA;color:#2C2620;border-color:#E5DECF"><div class="name">Фон</div><div class="hex">#F5F1EA</div></div>
+      <div class="sw" style="background:#FFFFFF;color:#2C2620;border-color:#E5DECF"><div class="name">Поверхность</div><div class="hex">#FFFFFF</div></div>
+      <div class="sw" style="background:#E5DECF;color:#2C2620;border-color:#E5DECF"><div class="name">Линии</div><div class="hex">#E5DECF</div></div>
+      <div class="sw" style="background:#2C2620;color:#F5F1EA;border-color:#2C2620"><div class="name">Текст</div><div class="hex">#2C2620</div></div>
+      <div class="sw" style="background:#6B6258;color:#F5F1EA;border-color:#6B6258"><div class="name">Приглушённый</div><div class="hex">#6B6258</div></div>
+      <div class="sw" style="background:#8E7548;color:#FFFFFF;border-color:#8E7548"><div class="name">Акцент</div><div class="hex">#8E7548</div></div>
+      <div class="sw" style="background:#5A6B52;color:#FFFFFF;border-color:#5A6B52"><div class="name">Успех</div><div class="hex">#5A6B52</div></div>
+      <div class="sw" style="background:#8E5048;color:#FFFFFF;border-color:#8E5048"><div class="name">Ошибка</div><div class="hex">#8E5048</div></div>
+    </div>
+
+    <div class="mock">
+      <div class="card">
+        <h3>Бритьё опасной бритвой</h3>
+        <div class="meta">45 минут · горячий компресс · масла</div>
+        <div class="price-row"><span>Стандартное</span><span class="price">1 200 ₽</span></div>
+        <div class="price-row"><span>С уходом</span><span class="price">1 500 ₽</span></div>
+        <div style="margin-top:20px"><button class="btn">Записаться</button></div>
+      </div>
+      <div class="card">
+        <h3>Профиль</h3>
+        <div class="meta">Иван Петров</div>
+        <div class="form-row">
+          <label>Email</label>
+          <input value="ivan@example.com" />
+        </div>
+        <div class="form-row">
+          <label>Телефон</label>
+          <input value="+7 918 123-45-67" />
+        </div>
+        <button class="btn">Сохранить</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

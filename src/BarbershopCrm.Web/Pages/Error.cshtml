@@ -1,0 +1,15 @@
+@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "Ошибка";
+}
+
+<h1>Что-то пошло не так.</h1>
+<p class="muted">Запрос не удалось обработать. Попробуйте обновить страницу или вернуться на главную.</p>
+
+@if (Model.ShowRequestId)
+{
+    <p class="faint">Идентификатор запроса: <code>@Model.RequestId</code></p>
+}
+
+<a class="btn btn--outline" asp-page="/Index">На главную</a>

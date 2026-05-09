@@ -1,0 +1,62 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Главная";
+}
+
+<section class="hero">
+    <h1>Тихий час</h1>
+    <p>Сеть барбершопов в Краснодаре. CRM-система управляет филиалами, расписанием мастеров, онлайн-записью клиентов и аналитикой по сети.</p>
+    <a class="btn" href="#">Записаться онлайн</a>
+    <a class="btn btn--outline" href="#" style="margin-left: var(--space-3)">Войти в кабинет</a>
+</section>
+
+<div class="divider"></div>
+
+<h2>Филиалы</h2>
+<p class="muted">Два барбершопа в Краснодаре, одинаковый прайс, общие правила работы.</p>
+
+<div class="grid-3" style="grid-template-columns: repeat(2, 1fr); margin-top: var(--space-4);">
+    @foreach (var branch in Model.Branches)
+    {
+        <article class="card">
+            <h3>@branch.Name</h3>
+            <p class="muted">@branch.Address</p>
+            <p class="faint tnum">@branch.OpeningTime.ToString("HH:mm") – @branch.ClosingTime.ToString("HH:mm")</p>
+            @if (!string.IsNullOrWhiteSpace(branch.Phone))
+            {
+                <p class="muted tnum">@branch.Phone</p>
+            }
+        </article>
+    }
+</div>
+
+<div class="divider"></div>
+
+<h2>Услуги</h2>
+<p class="muted">Прайс на всю сеть. Длительность — для расчёта свободных слотов в шаге 15 минут.</p>
+
+<div class="grid-3" style="margin-top: var(--space-4);">
+    @foreach (var service in Model.Services)
+    {
+        <article class="card service-card">
+            <h3>@service.Name</h3>
+            <p class="muted">@service.Description</p>
+            <p class="faint tnum">@service.DurationMinutes мин</p>
+            <div class="price tnum">@service.Price.ToString("0") ₽</div>
+        </article>
+    }
+</div>
+
+<div class="divider"></div>
+
+<section class="card">
+    <h3>Состояние каркаса</h3>
+    <p class="muted">Это стартовая страница для проверки палитры и подключения к БД. Бизнес-логика (вход, регистрация, онлайн-запись) добавляется в следующих PR по модулям M1–M6 из <code>docs/analysis.md</code>.</p>
+    <p>
+        <span class="badge success">EF Core ✓</span>
+        <span class="badge info">SQLite ✓</span>
+        <span class="badge warning">PBKDF2 готов</span>
+        <span class="badge">Razor Pages</span>
+    </p>
+</section>

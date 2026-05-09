@@ -1,0 +1,57 @@
+@{
+    var theme = Context.Request.Cookies["theme"];
+    if (theme != "light" && theme != "dark") theme = "dark";
+
+    var nextTheme = theme == "dark" ? "light" : "dark";
+    var nextThemeLabel = nextTheme == "dark" ? "Тёмная" : "Светлая";
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+}
+<!DOCTYPE html>
+<html lang="ru" data-theme="@theme">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] ?? "Тихий час") · CRM</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="app-shell">
+        <header class="app-header">
+            <div class="app-header__inner">
+                <a class="brand" asp-page="/Index">
+                    <span class="brand-mark">Тихий час</span>
+                    <span class="brand-tag">барбершопы Краснодара</span>
+                </a>
+                <nav class="app-nav">
+                    <a asp-page="/Index">Главная</a>
+                    <a href="#">Услуги</a>
+                    <a href="#">Филиалы</a>
+                    <a href="#">Записаться</a>
+                    <a class="theme-toggle"
+                       asp-page="/Theme/Set"
+                       asp-route-value="@nextTheme"
+                       asp-route-returnUrl="@returnUrl"
+                       title="Переключить тему">
+                        @nextThemeLabel
+                    </a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="app-main">
+            @RenderBody()
+        </main>
+
+        <footer class="app-footer">
+            © @DateTime.UtcNow.Year · «Тихий час» · Краснодар · CRM-система (диплом)
+        </footer>
+    </div>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

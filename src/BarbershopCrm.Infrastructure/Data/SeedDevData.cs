@@ -57,16 +57,20 @@ public static class SeedDevData
         // ---- Masters (2 per branch) — also create Master entities ----------
         AddMaster(db, hash, now, masterRoleId, branch1,
             "master1@thq.ru", "Кузнецов", "Артём", "Олегович", "+79180000020",
-            position: "Старший барбер", hireDate: new DateOnly(2023, 5, 1));
+            position: "Старший барбер", hireDate: new DateOnly(2023, 5, 1),
+            serviceIds: new[] { 1, 2, 3, 4, 5 });
         AddMaster(db, hash, now, masterRoleId, branch1,
             "master2@thq.ru", "Морозов", "Денис", "Викторович", "+79180000021",
-            position: "Барбер", hireDate: new DateOnly(2024, 2, 15));
+            position: "Барбер", hireDate: new DateOnly(2024, 2, 15),
+            serviceIds: new[] { 1, 2, 4 });
         AddMaster(db, hash, now, masterRoleId, branch2,
             "master3@thq.ru", "Волков", "Илья", "Андреевич", "+79180000022",
-            position: "Барбер", hireDate: new DateOnly(2024, 7, 1));
+            position: "Барбер", hireDate: new DateOnly(2024, 7, 1),
+            serviceIds: new[] { 1, 3, 4, 5 });
         AddMaster(db, hash, now, masterRoleId, branch2,
             "master4@thq.ru", "Соколов", "Никита", "Сергеевич", "+79180000023",
-            position: "Барбер", hireDate: new DateOnly(2025, 1, 10));
+            position: "Барбер", hireDate: new DateOnly(2025, 1, 10),
+            serviceIds: new[] { 1, 2 });
 
         // ---- Clients (3 demo) — also create Client entities ----------------
         AddClient(db, hash, now, clientRoleId,
@@ -123,18 +127,28 @@ public static class SeedDevData
         int masterRoleId,
         int branchId,
         string login, string lastName, string firstName, string? middleName, string phone,
-        string position, DateOnly hireDate)
+        string position, DateOnly hireDate,
+        int[]? serviceIds = null)
     {
         var user = Add(db, hash, now, masterRoleId, branchId, login, lastName, firstName, middleName, phone,
             emailConfirmed: true);
-        db.Masters.Add(new Master
+        var master = new Master
         {
             Persona = user.Persona,
             BranchId = branchId,
             Position = position,
             HireDate = hireDate,
             IsActive = true,
-        });
+        };
+        db.Masters.Add(master);
+
+        if (serviceIds is not null)
+        {
+            foreach (var sid in serviceIds)
+            {
+                db.MasterServices.Add(new MasterService { Master = master, ServiceId = sid });
+            }
+        }
     }
 
     private static void AddClient(

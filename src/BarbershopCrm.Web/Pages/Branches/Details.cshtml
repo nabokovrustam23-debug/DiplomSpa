@@ -1,0 +1,65 @@
+@page "/Branches/{id:int}"
+@model BarbershopCrm.Web.Pages.Branches.DetailsModel
+@{
+    ViewData["Title"] = Model.Branch.Name;
+}
+
+<nav class="breadcrumbs faint" aria-label="Хлебные крошки">
+    <a asp-page="/Branches/Index">Филиалы</a> ›
+    <span>@Model.Branch.Name</span>
+</nav>
+
+<header class="page-header">
+    <h1>@Model.Branch.Name</h1>
+    <p class="muted">@Model.Branch.Address</p>
+</header>
+
+<div class="branch-details">
+    @if (!string.IsNullOrEmpty(Model.Branch.ImageUrl))
+    {
+        <img class="image-thumb branch-details__image" src="@Model.Branch.ImageUrl" alt="Фотография филиала «@Model.Branch.Name»" />
+    }
+
+    <dl class="info-list">
+        <dt>Часы работы</dt>
+        <dd class="tnum">@Model.Branch.OpeningTime.ToString("HH:mm") – @Model.Branch.ClosingTime.ToString("HH:mm")</dd>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Branch.Phone))
+        {
+            <dt>Телефон</dt>
+            <dd class="tnum">
+                <a href="tel:@Model.Branch.Phone.Replace(" ", "").Replace("(", "").Replace(")", "").Replace("-", "")">@Model.Branch.Phone</a>
+            </dd>
+        }
+    </dl>
+</div>
+
+<section style="margin-top: var(--space-6);" aria-labelledby="masters-heading">
+    <h2 id="masters-heading">Мастера филиала</h2>
+
+    @if (Model.Masters.Count == 0)
+    {
+        <p class="muted">В этом филиале пока нет мастеров.</p>
+    }
+    else
+    {
+        <div class="grid-3" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); margin-top: var(--space-4);">
+            @foreach (var master in Model.Masters)
+            {
+                <article class="card">
+                    <h3>@master.Persona.FullName</h3>
+                    @if (!string.IsNullOrWhiteSpace(master.Bio))
+                    {
+                        <p class="faint">@master.Bio</p>
+                    }
+                    @if (master.MasterServices.Any())
+                    {
+                        <p class="faint">Услуги: @string.Join(", ", master.MasterServices.Select(ms => ms.Service.Name))</p>
+                    }
+                </article>
+            }
+        </div>
+    }
+</section>
+
+<p style="margin-top: var(--space-5);"><a asp-page="/Branches/Index">← Все филиалы</a></p>

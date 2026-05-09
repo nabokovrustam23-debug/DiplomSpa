@@ -1,0 +1,121 @@
+@page
+@model BarbershopCrm.Web.Pages.Owner.Branches.IndexModel
+@{
+    ViewData["Title"] = "Управление · Филиалы";
+    ViewData["ManagementTab"] = "branches";
+}
+
+<partial name="_ManagementTabs" />
+
+<section class="card" aria-labelledby="branches-list-heading">
+    <div class="card__header-row">
+        <h2 id="branches-list-heading">Список филиалов</h2>
+        <span class="faint">Всего: @Model.Branches.Count</span>
+    </div>
+
+    @if (Model.Branches.Count == 0)
+    {
+        <p class="muted">Пока ни одного филиала. Добавьте первый ниже.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Фото</th>
+                    <th scope="col">Название</th>
+                    <th scope="col">Адрес</th>
+                    <th scope="col">Часы работы</th>
+                    <th scope="col">Телефон</th>
+                    <th scope="col">Статус</th>
+                    <th scope="col"><span class="visually-hidden">Действия</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model.Branches)
+                {
+                    <tr class="@(b.IsActive ? "" : "row--inactive")">
+                        <td>
+                            @if (!string.IsNullOrEmpty(b.ImageUrl))
+                            {
+                                <img class="image-thumb image-thumb--small" src="@b.ImageUrl" alt="Фото филиала «@b.Name»" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="image-thumb image-thumb--small image-placeholder" aria-hidden="true">—</div>
+                            }
+                        </td>
+                        <td>@b.Name</td>
+                        <td>@b.Address</td>
+                        <td class="tnum">@b.OpeningTime.ToString("HH:mm") – @b.ClosingTime.ToString("HH:mm")</td>
+                        <td class="tnum">@(b.Phone ?? "—")</td>
+                        <td>@(b.IsActive ? "Активен" : "Закрыт")</td>
+                        <td class="actions">
+                            <a asp-page="Edit" asp-route-id="@b.BranchId" class="btn btn--sm" aria-label="Изменить филиал «@b.Name»">Изменить</a>
+                            @if (b.IsActive)
+                            {
+                                <a asp-page="Delete" asp-route-id="@b.BranchId" class="btn btn--sm btn--danger" aria-label="Закрыть филиал «@b.Name»">Закрыть</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section class="card" aria-labelledby="branches-add-heading">
+    <h2 id="branches-add-heading">Добавить филиал</h2>
+    <p class="muted">Начните вводить адрес — подсказки подтянут точные координаты для карты.</p>
+
+    <form method="post" class="form-grid" enctype="multipart/form-data" data-busy>
+        <div asp-validation-summary="ModelOnly" class="alert alert--error"></div>
+
+        <div class="form-group">
+            <label asp-for="Input.Name">Название</label>
+            <input asp-for="Input.Name" required class="input" placeholder="Тихий час — …" autofocus />
+            <span asp-validation-for="Input.Name" class="field-error"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.Address">Адрес <span class="faint">— начните вводить, появятся подсказки</span></label>
+            <input asp-for="Input.Address" required class="input"
+                   placeholder="Краснодар, ул. Красная, 32"
+                   data-address-suggest
+                   data-lat-target="#Input_Latitude"
+                   data-lon-target="#Input_Longitude" />
+            <span asp-validation-for="Input.Address" class="field-error"></span>
+            <input asp-for="Input.Latitude" type="hidden" id="Input_Latitude" />
+            <input asp-for="Input.Longitude" type="hidden" id="Input_Longitude" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.Phone">Телефон</label>
+            <input asp-for="Input.Phone" type="tel" class="input" placeholder="+7 (861) 200-10-10" />
+            <span asp-validation-for="Input.Phone" class="field-error"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.ImageFile">Фото филиала <span class="faint">— jpg/png/webp до 4&nbsp;МБ</span></label>
+            <input asp-for="Input.ImageFile" type="file" accept="image/jpeg,image/png,image/webp" class="input" />
+            <span asp-validation-for="Input.ImageFile" class="field-error"></span>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label asp-for="Input.OpeningTime">Открытие</label>
+                <input asp-for="Input.OpeningTime" type="time" required class="input" />
+                <span asp-validation-for="Input.OpeningTime" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.ClosingTime">Закрытие</label>
+                <input asp-for="Input.ClosingTime" type="time" required class="input" />
+                <span asp-validation-for="Input.ClosingTime" class="field-error"></span>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Создать филиал</button>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/address-suggest.js" asp-append-version="true"></script>
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+}

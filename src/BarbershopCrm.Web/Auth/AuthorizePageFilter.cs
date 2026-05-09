@@ -41,7 +41,7 @@ public sealed class AuthorizePageFilter : IAsyncPageFilter
 
         if (attr.Roles.Length > 0 && !attr.Roles.Contains(_currentUser.User!.RoleCode))
         {
-            context.Result = new ForbidResult();
+            context.Result = new StatusCodeResult(403);
             return;
         }
 

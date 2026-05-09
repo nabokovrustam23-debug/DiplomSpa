@@ -1,0 +1,102 @@
+@page
+@model BarbershopCrm.Web.Pages.Owner.Services.IndexModel
+@{
+    ViewData["Title"] = "Управление · Услуги";
+    ViewData["ManagementTab"] = "services";
+}
+
+<partial name="_ManagementTabs" />
+
+<section class="card" aria-labelledby="services-list-heading">
+    <div class="card__header-row">
+        <h2 id="services-list-heading">Прайс-лист</h2>
+        <span class="faint">Всего: @Model.Services.Count</span>
+    </div>
+
+    @if (Model.Services.Count == 0)
+    {
+        <p class="muted">Услуг пока нет. Добавьте первую ниже.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Фото</th>
+                    <th scope="col">Название</th>
+                    <th scope="col">Длительность</th>
+                    <th scope="col">Цена</th>
+                    <th scope="col">Статус</th>
+                    <th scope="col"><span class="visually-hidden">Действия</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Services)
+                {
+                    <tr class="@(s.IsActive ? "" : "row--inactive")">
+                        <td>
+                            @if (!string.IsNullOrEmpty(s.ImageUrl))
+                            {
+                                <img class="image-thumb image-thumb--small" src="@s.ImageUrl" alt="Фото услуги «@s.Name»" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="image-thumb image-thumb--small image-placeholder" aria-hidden="true">—</div>
+                            }
+                        </td>
+                        <td>@s.Name</td>
+                        <td class="tnum">@s.DurationMinutes мин</td>
+                        <td class="tnum">@s.Price.ToString("0") ₽</td>
+                        <td>@(s.IsActive ? "Активна" : "Скрыта")</td>
+                        <td>
+                            <a asp-page="Edit" asp-route-id="@s.ServiceId" class="btn btn--sm" aria-label="Изменить услугу «@s.Name»">Изменить</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section class="card" aria-labelledby="services-add-heading">
+    <h2 id="services-add-heading">Добавить услугу</h2>
+
+    <form method="post" class="form-grid" enctype="multipart/form-data" data-busy>
+        <div asp-validation-summary="ModelOnly" class="alert alert--error"></div>
+
+        <div class="form-group">
+            <label asp-for="Input.Name">Название</label>
+            <input asp-for="Input.Name" required class="input" placeholder="Мужская стрижка" autofocus />
+            <span asp-validation-for="Input.Name" class="field-error"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.Description">Описание <span class="faint">(необязательно)</span></label>
+            <input asp-for="Input.Description" class="input" placeholder="Короткое описание для прайса" />
+            <span asp-validation-for="Input.Description" class="field-error"></span>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label asp-for="Input.DurationMinutes">Длительность (мин) <span class="faint">— шаг 15</span></label>
+                <input asp-for="Input.DurationMinutes" type="number" min="15" step="15" max="480" required class="input" />
+                <span asp-validation-for="Input.DurationMinutes" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.Price">Цена (₽) <span class="faint">— минимум 200, шаг 50</span></label>
+                <input asp-for="Input.Price" type="number" min="200" step="50" required class="input" />
+                <span asp-validation-for="Input.Price" class="field-error"></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.ImageFile">Фото услуги <span class="faint">— jpg/png/webp до 4&nbsp;МБ</span></label>
+            <input asp-for="Input.ImageFile" type="file" accept="image/jpeg,image/png,image/webp" />
+            <span asp-validation-for="Input.ImageFile" class="field-error"></span>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Создать услугу</button>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+}

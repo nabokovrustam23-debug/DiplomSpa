@@ -1,0 +1,99 @@
+@page "{id:int}"
+@model BarbershopCrm.Web.Pages.Owner.Branches.EditModel
+@{
+    ViewData["Title"] = "Редактирование филиала";
+    ViewData["ManagementTab"] = "branches";
+}
+
+<partial name="_ManagementTabs" />
+
+<section class="card">
+    <nav class="breadcrumbs faint" aria-label="Хлебные крошки">
+        <a asp-page="Index">Филиалы</a> ›
+        <span>Редактирование</span>
+    </nav>
+    <h2 class="manage-tabs__heading">Редактирование филиала</h2>
+
+    <form method="post" asp-route-id="@Model.BranchId" class="form-grid" enctype="multipart/form-data" data-busy>
+        <div asp-validation-summary="ModelOnly" class="alert alert--error"></div>
+
+        <div class="form-group">
+            <label asp-for="Input.Name">Название</label>
+            <input asp-for="Input.Name" required class="input" />
+            <span asp-validation-for="Input.Name" class="field-error"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.Address">Адрес <span class="faint">— начните вводить, появятся подсказки</span></label>
+            <input asp-for="Input.Address" required class="input"
+                   data-address-suggest
+                   data-lat-target="#Input_Latitude"
+                   data-lon-target="#Input_Longitude" />
+            <span asp-validation-for="Input.Address" class="field-error"></span>
+            <input asp-for="Input.Latitude" type="hidden" id="Input_Latitude" />
+            <input asp-for="Input.Longitude" type="hidden" id="Input_Longitude" />
+            @if (Model.Input.Latitude.HasValue && Model.Input.Longitude.HasValue)
+            {
+                <small class="faint">Координаты: @Model.Input.Latitude.Value.ToString("0.#####", System.Globalization.CultureInfo.InvariantCulture), @Model.Input.Longitude.Value.ToString("0.#####", System.Globalization.CultureInfo.InvariantCulture)</small>
+            }
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.Phone">Телефон</label>
+            <input asp-for="Input.Phone" type="tel" class="input" />
+            <span asp-validation-for="Input.Phone" class="field-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label>Фото филиала</label>
+            <div class="upload-row">
+                @if (!string.IsNullOrEmpty(Model.Input.ExistingImageUrl))
+                {
+                    <img class="image-thumb" src="@Model.Input.ExistingImageUrl" alt="Текущая фотография филиала" />
+                }
+                else
+                {
+                    <div class="image-thumb image-placeholder" aria-hidden="true">фото нет</div>
+                }
+                <div class="upload-controls">
+                    <input asp-for="Input.ImageFile" type="file" accept="image/jpeg,image/png,image/webp" />
+                    <span class="faint">jpg/png/webp до 4&nbsp;МБ. Загрузка нового файла заменит текущее фото.</span>
+                    <span asp-validation-for="Input.ImageFile" class="field-error"></span>
+                    @if (!string.IsNullOrEmpty(Model.Input.ExistingImageUrl))
+                    {
+                        <label class="checkbox-item" style="margin-top: var(--space-2);">
+                            <input asp-for="Input.RemoveImage" type="checkbox" />
+                            Удалить текущее фото
+                        </label>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label asp-for="Input.OpeningTime">Открытие</label>
+                <input asp-for="Input.OpeningTime" type="time" required class="input" />
+                <span asp-validation-for="Input.OpeningTime" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.ClosingTime">Закрытие</label>
+                <input asp-for="Input.ClosingTime" type="time" required class="input" />
+                <span asp-validation-for="Input.ClosingTime" class="field-error"></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="checkbox-item">
+                <input asp-for="Input.IsActive" type="checkbox" />
+                Активен
+            </label>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Сохранить</button>
+            <a asp-page="Index" class="btn btn--outline">Отмена</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/address-suggest.js" asp-append-version="true"></script>
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+}

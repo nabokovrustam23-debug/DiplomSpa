@@ -1,0 +1,104 @@
+@page "{id:int}"
+@model BarbershopCrm.Web.Pages.Masters.EditModel
+@{
+    ViewData["Title"] = $"Редактирование мастера — {Model.MasterName}";
+    ViewData["ManagementTab"] = "masters";
+    var isOwner = Model.Current?.RoleCode == RoleCode.Owner;
+}
+
+<partial name="_ManagementTabs" />
+
+<section class="card">
+    <nav class="breadcrumbs faint" aria-label="Хлебные крошки">
+        <a asp-page="Manage">Мастера</a> ›
+        <span>Редактирование</span>
+    </nav>
+    <h2 class="manage-tabs__heading">Редактирование мастера</h2>
+    <p class="muted">@Model.MasterName</p>
+
+    <form method="post" asp-route-id="@Model.MasterId" class="form-grid" data-busy>
+        <div asp-validation-summary="ModelOnly" class="alert alert--error"></div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label asp-for="Input.LastName">Фамилия</label>
+                <input asp-for="Input.LastName" required class="input" />
+                <span asp-validation-for="Input.LastName" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.FirstName">Имя</label>
+                <input asp-for="Input.FirstName" required class="input" />
+                <span asp-validation-for="Input.FirstName" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.MiddleName">Отчество <span class="faint">(необязательно)</span></label>
+                <input asp-for="Input.MiddleName" class="input" />
+                <span asp-validation-for="Input.MiddleName" class="field-error"></span>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label asp-for="Input.Phone">Телефон</label>
+                <input asp-for="Input.Phone" type="tel" required class="input" placeholder="+7 (918) 000-11-22" />
+                <span asp-validation-for="Input.Phone" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.Email">Email <span class="faint">(необязательно)</span></label>
+                <input asp-for="Input.Email" type="email" class="input" />
+                <span asp-validation-for="Input.Email" class="field-error"></span>
+            </div>
+            @if (isOwner)
+            {
+                <div class="form-group">
+                    <label asp-for="Input.BranchId">Филиал</label>
+                    <select asp-for="Input.BranchId" class="input" required>
+                        @foreach (var b in Model.Branches)
+                        {
+                            <option value="@b.BranchId">@b.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Input.BranchId" class="field-error"></span>
+                </div>
+            }
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.Bio">Биография / о мастере</label>
+            <textarea asp-for="Input.Bio" class="input" rows="3" placeholder="Опыт, специализация, увлечения"></textarea>
+            <span asp-validation-for="Input.Bio" class="field-error"></span>
+        </div>
+        <div class="form-group">
+            <label class="checkbox-item">
+                <input asp-for="Input.IsActive" type="checkbox" />
+                Активен
+            </label>
+        </div>
+
+        <fieldset class="form-group">
+            <legend><strong>Привязка услуг</strong> <span class="faint">(минимум одна)</span></legend>
+            <p class="muted">Отметьте услуги, которые выполняет этот мастер.</p>
+            <div class="checkbox-grid">
+                @foreach (var service in Model.AllServices)
+                {
+                    var isChecked = Model.Input.SelectedServiceIds.Contains(service.ServiceId);
+                    <label class="checkbox-item">
+                        <input type="checkbox"
+                               name="Input.SelectedServiceIds"
+                               value="@service.ServiceId"
+                               @(isChecked ? "checked" : "") />
+                        @service.Name <span class="faint">(@service.DurationMinutes мин, @service.Price.ToString("0") ₽)</span>
+                    </label>
+                }
+            </div>
+            <span asp-validation-for="Input.SelectedServiceIds" class="field-error"></span>
+        </fieldset>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Сохранить</button>
+            <a asp-page="Manage" class="btn btn--outline">Отмена</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+}

@@ -39,5 +39,26 @@
             Нет аккаунта?
             <a asp-page="/Account/Register">Зарегистрироваться</a>
         </div>
+
+        @if (Model.ShowQuickLogin)
+        {
+            <div class="quick-login">
+                <div class="quick-login__title">Быстрый вход (только для разработки)</div>
+                <p class="faint quick-login__hint">Тестовые учётки с паролем <code>Test12345!</code> для проверки модулей.</p>
+
+                @foreach (var acc in Model.QuickAccounts)
+                {
+                    <form method="post" asp-page-handler="Quick" class="quick-login__row">
+                        <input type="hidden" name="email" value="@acc.Email" />
+                        <input asp-for="ReturnUrl" type="hidden" />
+                        <button type="submit" class="btn btn--outline btn--sm quick-login__btn">
+                            <span class="quick-login__name">@acc.Title</span>
+                            <span class="quick-login__sub">@acc.Subtitle</span>
+                            <span class="quick-login__email">@acc.Email</span>
+                        </button>
+                    </form>
+                }
+            </div>
+        }
     </div>
 </section>

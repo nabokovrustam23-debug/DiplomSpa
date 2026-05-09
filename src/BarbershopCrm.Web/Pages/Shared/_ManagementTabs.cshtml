@@ -1,0 +1,34 @@
+@inject ICurrentUserAccessor CurrentUserAccessor
+@{
+    var currentTab = ViewData["ManagementTab"] as string ?? "";
+    var role = CurrentUserAccessor.User?.RoleCode;
+    var isOwner = role == RoleCode.Owner;
+    var isAdmin = role == RoleCode.Admin;
+}
+
+<nav class="manage-tabs" aria-label="Управление">
+    <h1 class="manage-tabs__heading">Управление</h1>
+    <div class="manage-tabs__list" role="tablist">
+        @if (isOwner)
+        {
+            <a class="manage-tabs__tab @(currentTab == "branches" ? "is-active" : "")"
+               role="tab" aria-selected="@(currentTab == "branches" ? "true" : "false")"
+               asp-page="/Owner/Branches/Index">
+                Филиалы
+            </a>
+            <a class="manage-tabs__tab @(currentTab == "services" ? "is-active" : "")"
+               role="tab" aria-selected="@(currentTab == "services" ? "true" : "false")"
+               asp-page="/Owner/Services/Index">
+                Услуги
+            </a>
+        }
+        @if (isOwner || isAdmin)
+        {
+            <a class="manage-tabs__tab @(currentTab == "masters" ? "is-active" : "")"
+               role="tab" aria-selected="@(currentTab == "masters" ? "true" : "false")"
+               asp-page="/Masters/Manage">
+                Мастера
+            </a>
+        }
+    </div>
+</nav>

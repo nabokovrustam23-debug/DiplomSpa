@@ -8,6 +8,7 @@ public class Branch
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
     public string? Phone { get; set; }
+    public string? ImageUrl { get; set; }
     public TimeOnly OpeningTime { get; set; }
     public TimeOnly ClosingTime { get; set; }
     public bool IsActive { get; set; } = true;

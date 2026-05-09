@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Перейти к содержимому</a>
     <div class="app-shell">
         <header class="app-header">
             <div class="app-header__inner">
@@ -30,20 +31,19 @@
                     <span class="brand-mark">Тихий час</span>
                     <span class="brand-tag">барбершопы Краснодара</span>
                 </a>
-                <nav class="app-nav">
+                <nav class="app-nav" aria-label="Главное меню">
                     <a asp-page="/Index">Главная</a>
                     <a asp-page="/Services/Index">Услуги</a>
                     <a asp-page="/Branches/Index">Филиалы</a>
                     <a href="#">Записаться</a>
 
-                    @if (current is not null && (current.RoleCode == RoleCode.Owner || current.RoleCode == RoleCode.Admin))
-                    {
-                        <a asp-page="/Masters/Manage" class="nav-manage">Мастера</a>
-                    }
                     @if (current is not null && current.RoleCode == RoleCode.Owner)
                     {
-                        <a asp-page="/Owner/Branches/Index" class="nav-manage">Филиалы ⚙</a>
-                        <a asp-page="/Owner/Services/Index" class="nav-manage">Услуги ⚙</a>
+                        <a asp-page="/Owner/Branches/Index" class="nav-manage">Управление</a>
+                    }
+                    else if (current is not null && current.RoleCode == RoleCode.Admin)
+                    {
+                        <a asp-page="/Masters/Manage" class="nav-manage">Управление</a>
                     }
 
                     @if (current is null)
@@ -71,7 +71,25 @@
             </div>
         </header>
 
-        <main class="app-main">
+        <main class="app-main" id="main-content" tabindex="-1">
+            @{
+                var successMsg = TempData["Success"] as string;
+                var errorMsg = TempData["Error"] as string;
+            }
+            @if (!string.IsNullOrEmpty(successMsg))
+            {
+                <div class="toast toast--success" role="status" aria-live="polite">
+                    <span class="toast__icon" aria-hidden="true">✓</span>
+                    <span class="toast__text">@successMsg</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <div class="toast toast--error" role="alert" aria-live="assertive">
+                    <span class="toast__icon" aria-hidden="true">!</span>
+                    <span class="toast__text">@errorMsg</span>
+                </div>
+            }
             @RenderBody()
         </main>
 

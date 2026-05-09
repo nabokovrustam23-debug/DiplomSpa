@@ -4,20 +4,41 @@
     ViewData["Title"] = "Филиалы";
 }
 
-<h1>Филиалы</h1>
-<p class="muted">Все действующие филиалы сети «Тихий час».</p>
+<header class="page-header">
+    <h1>Филиалы</h1>
+    <p class="muted">Все действующие филиалы сети «Тихий час».</p>
+</header>
 
-<div class="grid-3" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin-top: var(--space-4);">
-    @foreach (var branch in Model.Branches)
-    {
-        <article class="card">
-            <h3><a asp-page="/Branches/Details" asp-route-id="@branch.BranchId">@branch.Name</a></h3>
-            <p class="muted">@branch.Address</p>
-            <p class="faint tnum">@branch.OpeningTime.ToString("HH:mm") – @branch.ClosingTime.ToString("HH:mm")</p>
-            @if (!string.IsNullOrWhiteSpace(branch.Phone))
-            {
-                <p class="muted tnum">@branch.Phone</p>
-            }
-        </article>
-    }
-</div>
+@if (Model.Branches.Count == 0)
+{
+    <p class="muted">Активных филиалов пока нет.</p>
+}
+else
+{
+    <div class="grid-3" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin-top: var(--space-4);">
+        @foreach (var branch in Model.Branches)
+        {
+            <article class="card branch-card">
+                @if (!string.IsNullOrEmpty(branch.ImageUrl))
+                {
+                    <a asp-page="/Branches/Details" asp-route-id="@branch.BranchId" tabindex="-1" aria-hidden="true">
+                        <img class="image-thumb branch-card__image" src="@branch.ImageUrl" alt="" loading="lazy" />
+                    </a>
+                }
+                else
+                {
+                    <div class="image-thumb image-placeholder branch-card__image" aria-hidden="true">фото скоро появится</div>
+                }
+                <h3><a asp-page="/Branches/Details" asp-route-id="@branch.BranchId">@branch.Name</a></h3>
+                <p class="muted">@branch.Address</p>
+                <p class="faint tnum">@branch.OpeningTime.ToString("HH:mm") – @branch.ClosingTime.ToString("HH:mm")</p>
+                @if (!string.IsNullOrWhiteSpace(branch.Phone))
+                {
+                    <p class="muted tnum">
+                        <a href="tel:@branch.Phone.Replace(" ", "").Replace("(", "").Replace(")", "").Replace("-", "")">@branch.Phone</a>
+                    </p>
+                }
+            </article>
+        }
+    </div>
+}

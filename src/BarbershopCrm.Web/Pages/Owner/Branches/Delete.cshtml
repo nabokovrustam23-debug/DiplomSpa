@@ -2,16 +2,30 @@
 @model BarbershopCrm.Web.Pages.Owner.Branches.DeleteModel
 @{
     ViewData["Title"] = "Закрытие филиала";
+    ViewData["ManagementTab"] = "branches";
 }
 
-<h1>Закрытие филиала</h1>
+<partial name="_ManagementTabs" />
 
-<div class="card" style="max-width: 500px;">
+<section class="card" style="max-width: 560px;">
+    <nav class="breadcrumbs faint" aria-label="Хлебные крошки">
+        <a asp-page="Index">Филиалы</a> ›
+        <span>Закрытие</span>
+    </nav>
+    <h2>Закрытие филиала</h2>
     <p>Вы уверены, что хотите деактивировать филиал <strong>«@Model.BranchName»</strong>?</p>
-    <p class="muted">Филиал не будет удалён, но перестанет отображаться в публичных списках. Его можно будет восстановить через редактирование.</p>
+    <p class="muted">Филиал не будет удалён — он перестанет отображаться в публичных списках. Его можно будет восстановить через редактирование.</p>
 
-    <form method="post" asp-route-id="@Model.BranchId" style="margin-top: var(--space-4);">
-        <button type="submit" class="btn btn--danger">Деактивировать</button>
-        <a asp-page="Index" class="btn btn--outline" style="margin-left: var(--space-3);">Отмена</a>
+    <form method="post" asp-route-id="@Model.BranchId" data-busy>
+        <div class="form-actions">
+            <button type="submit" class="btn btn--danger" onclick="return confirm('Точно деактивировать филиал «@Model.BranchName»?');">
+                Деактивировать
+            </button>
+            <a asp-page="Index" class="btn btn--outline">Отмена</a>
+        </div>
     </form>
-</div>
+</section>
+
+@section Scripts {
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+}

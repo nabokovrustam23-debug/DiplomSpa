@@ -4,6 +4,7 @@ using BarbershopCrm.Infrastructure.Auth;
 using BarbershopCrm.Infrastructure.Data;
 using BarbershopCrm.Web.Auth;
 using BarbershopCrm.Web.Pages;
+using BarbershopCrm.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +14,12 @@ namespace BarbershopCrm.Web.Pages.Owner.Services;
 public class EditModel : AppPageModel
 {
     private readonly AppDbContext _db;
+    private readonly IImageUploadService _images;
 
-    public EditModel(AppDbContext db, ICurrentUserAccessor currentUser) : base(currentUser)
+    public EditModel(AppDbContext db, ICurrentUserAccessor currentUser, IImageUploadService images) : base(currentUser)
     {
         _db = db;
+        _images = images;
     }
 
     [BindProperty]
@@ -36,6 +39,7 @@ public class EditModel : AppPageModel
             Description = service.Description,
             DurationMinutes = service.DurationMinutes,
             Price = service.Price,
+            ExistingImageUrl = service.ImageUrl,
             IsActive = service.IsActive,
         };
         return Page();
@@ -47,9 +51,32 @@ public class EditModel : AppPageModel
         if (service is null) return NotFound();
 
         ServiceId = id;
+        Input.ExistingImageUrl = service.ImageUrl;
 
         if (!ModelState.IsValid)
             return Page();
+
+        if (Input.RemoveImage)
+        {
+            _images.Delete(service.ImageUrl);
+            service.ImageUrl = null;
+        }
+
+        if (Input.ImageFile is { Length: > 0 })
+        {
+            string? newUrl;
+            try
+            {
+                newUrl = await _images.SaveAsync(Input.ImageFile, "services", ct);
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError("Input.ImageFile", ex.Message);
+                return Page();
+            }
+            _images.Delete(service.ImageUrl);
+            service.ImageUrl = newUrl;
+        }
 
         service.Name = Input.Name.Trim();
         service.Description = string.IsNullOrWhiteSpace(Input.Description) ? null : Input.Description.Trim();
@@ -77,6 +104,13 @@ public class EditModel : AppPageModel
 
         [Range(typeof(decimal), "200", "1000000", ErrorMessage = "Цена не может быть меньше 200 ₽.")]
         public decimal Price { get; set; } = 200m;
+
+        [Display(Name = "Фото услуги")]
+        public IFormFile? ImageFile { get; set; }
+
+        public string? ExistingImageUrl { get; set; }
+
+        public bool RemoveImage { get; set; }
 
         public bool IsActive { get; set; } = true;
     }

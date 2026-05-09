@@ -30,8 +30,6 @@ public class ManageModel : AppPageModel
     [BindProperty]
     public MasterInput Input { get; set; } = new();
 
-    public string? SuccessMessage { get; set; }
-
     public async Task OnGetAsync(CancellationToken ct)
     {
         await LoadData(ct);
@@ -129,8 +127,6 @@ public class ManageModel : AppPageModel
             .OrderBy(s => s.Name)
             .AsNoTracking()
             .ToListAsync(ct);
-
-        SuccessMessage = TempData["Success"] as string;
     }
 
     private int? ResolveBranchId(int? inputBranchId)

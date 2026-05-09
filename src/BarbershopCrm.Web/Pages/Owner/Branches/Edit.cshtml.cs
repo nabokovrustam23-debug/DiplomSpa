@@ -5,6 +5,7 @@ using BarbershopCrm.Infrastructure.Auth;
 using BarbershopCrm.Infrastructure.Data;
 using BarbershopCrm.Web.Auth;
 using BarbershopCrm.Web.Pages;
+using BarbershopCrm.Web.Services;
 using BarbershopCrm.Web.Validation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,10 +16,12 @@ namespace BarbershopCrm.Web.Pages.Owner.Branches;
 public class EditModel : AppPageModel
 {
     private readonly AppDbContext _db;
+    private readonly IImageUploadService _images;
 
-    public EditModel(AppDbContext db, ICurrentUserAccessor currentUser) : base(currentUser)
+    public EditModel(AppDbContext db, ICurrentUserAccessor currentUser, IImageUploadService images) : base(currentUser)
     {
         _db = db;
+        _images = images;
     }
 
     [BindProperty]
@@ -39,6 +42,7 @@ public class EditModel : AppPageModel
             Latitude = branch.Latitude,
             Longitude = branch.Longitude,
             Phone = branch.Phone,
+            ExistingImageUrl = branch.ImageUrl,
             OpeningTime = branch.OpeningTime.ToString("HH:mm"),
             ClosingTime = branch.ClosingTime.ToString("HH:mm"),
             IsActive = branch.IsActive,
@@ -52,9 +56,32 @@ public class EditModel : AppPageModel
         if (branch is null) return NotFound();
 
         BranchId = id;
+        Input.ExistingImageUrl = branch.ImageUrl;
 
         if (!ModelState.IsValid)
             return Page();
+
+        if (Input.RemoveImage)
+        {
+            _images.Delete(branch.ImageUrl);
+            branch.ImageUrl = null;
+        }
+
+        if (Input.ImageFile is { Length: > 0 })
+        {
+            string? newUrl;
+            try
+            {
+                newUrl = await _images.SaveAsync(Input.ImageFile, "branches", ct);
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError("Input.ImageFile", ex.Message);
+                return Page();
+            }
+            _images.Delete(branch.ImageUrl);
+            branch.ImageUrl = newUrl;
+        }
 
         branch.Name = Input.Name.Trim();
         branch.Address = Input.Address.Trim();
@@ -86,6 +113,13 @@ public class EditModel : AppPageModel
 
         [Range(-90, 90)] public double? Latitude { get; set; }
         [Range(-180, 180)] public double? Longitude { get; set; }
+
+        [Display(Name = "Фото филиала")]
+        public IFormFile? ImageFile { get; set; }
+
+        public string? ExistingImageUrl { get; set; }
+
+        public bool RemoveImage { get; set; }
 
         [Required, RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Время в формате ЧЧ:ММ.")]
         public string OpeningTime { get; set; } = "10:00";

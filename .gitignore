@@ -50,3 +50,7 @@ secrets.json
 # =============================================================================
 .DS_Store
 Thumbs.db
+
+# User-uploaded files (image uploads at runtime)
+src/BarbershopCrm.Web/wwwroot/uploads/*
+!src/BarbershopCrm.Web/wwwroot/uploads/.gitkeep

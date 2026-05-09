@@ -5,6 +5,7 @@ using BarbershopCrm.Infrastructure.Auth;
 using BarbershopCrm.Infrastructure.Data;
 using BarbershopCrm.Web.Auth;
 using BarbershopCrm.Web.Pages;
+using BarbershopCrm.Web.Services;
 using BarbershopCrm.Web.Validation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,18 +16,18 @@ namespace BarbershopCrm.Web.Pages.Owner.Branches;
 public class IndexModel : AppPageModel
 {
     private readonly AppDbContext _db;
+    private readonly IImageUploadService _images;
 
-    public IndexModel(AppDbContext db, ICurrentUserAccessor currentUser) : base(currentUser)
+    public IndexModel(AppDbContext db, ICurrentUserAccessor currentUser, IImageUploadService images) : base(currentUser)
     {
         _db = db;
+        _images = images;
     }
 
     public IList<Branch> Branches { get; private set; } = Array.Empty<Branch>();
 
     [BindProperty]
     public BranchInput Input { get; set; } = new();
-
-    public string? SuccessMessage { get; set; }
 
     public async Task OnGetAsync(CancellationToken ct)
     {
@@ -41,6 +42,18 @@ public class IndexModel : AppPageModel
             return Page();
         }
 
+        string? imageUrl;
+        try
+        {
+            imageUrl = await _images.SaveAsync(Input.ImageFile, "branches", ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError("Input.ImageFile", ex.Message);
+            await LoadBranches(ct);
+            return Page();
+        }
+
         var branch = new Branch
         {
             Name = Input.Name.Trim(),
@@ -48,6 +61,7 @@ public class IndexModel : AppPageModel
             Latitude = Input.Latitude,
             Longitude = Input.Longitude,
             Phone = string.IsNullOrWhiteSpace(Input.Phone) ? null : Input.Phone.Trim(),
+            ImageUrl = imageUrl,
             OpeningTime = TimeOnly.Parse(Input.OpeningTime),
             ClosingTime = TimeOnly.Parse(Input.ClosingTime),
             IsActive = true,
@@ -66,8 +80,6 @@ public class IndexModel : AppPageModel
             .OrderBy(b => b.BranchId)
             .AsNoTracking()
             .ToListAsync(ct);
-
-        SuccessMessage = TempData["Success"] as string;
     }
 
     public class BranchInput
@@ -85,6 +97,9 @@ public class IndexModel : AppPageModel
 
         [Range(-90, 90)] public double? Latitude { get; set; }
         [Range(-180, 180)] public double? Longitude { get; set; }
+
+        [Display(Name = "Фото филиала")]
+        public IFormFile? ImageFile { get; set; }
 
         [Required, RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Время в формате ЧЧ:ММ.")]
         public string OpeningTime { get; set; } = "10:00";

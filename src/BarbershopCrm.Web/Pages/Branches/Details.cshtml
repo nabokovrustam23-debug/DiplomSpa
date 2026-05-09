@@ -4,41 +4,62 @@
     ViewData["Title"] = Model.Branch.Name;
 }
 
-<h1>@Model.Branch.Name</h1>
-<p class="muted">@Model.Branch.Address</p>
-<p class="faint tnum">Часы работы: @Model.Branch.OpeningTime.ToString("HH:mm") – @Model.Branch.ClosingTime.ToString("HH:mm")</p>
-@if (!string.IsNullOrWhiteSpace(Model.Branch.Phone))
-{
-    <p class="muted tnum">Телефон: @Model.Branch.Phone</p>
-}
+<nav class="breadcrumbs faint" aria-label="Хлебные крошки">
+    <a asp-page="/Branches/Index">Филиалы</a> ›
+    <span>@Model.Branch.Name</span>
+</nav>
 
-<div class="divider"></div>
+<header class="page-header">
+    <h1>@Model.Branch.Name</h1>
+    <p class="muted">@Model.Branch.Address</p>
+</header>
 
-<h2>Мастера филиала</h2>
+<div class="branch-details">
+    @if (!string.IsNullOrEmpty(Model.Branch.ImageUrl))
+    {
+        <img class="image-thumb branch-details__image" src="@Model.Branch.ImageUrl" alt="Фотография филиала «@Model.Branch.Name»" />
+    }
 
-@if (Model.Masters.Count == 0)
-{
-    <p class="muted">В этом филиале пока нет мастеров.</p>
-}
-else
-{
-    <div class="grid-3" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); margin-top: var(--space-4);">
-        @foreach (var master in Model.Masters)
+    <dl class="info-list">
+        <dt>Часы работы</dt>
+        <dd class="tnum">@Model.Branch.OpeningTime.ToString("HH:mm") – @Model.Branch.ClosingTime.ToString("HH:mm")</dd>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Branch.Phone))
         {
-            <article class="card">
-                <h3>@master.Persona.FullName</h3>
-                <p class="muted">@master.Position</p>
-                @if (!string.IsNullOrWhiteSpace(master.Bio))
-                {
-                    <p class="faint">@master.Bio</p>
-                }
-                @if (master.MasterServices.Any())
-                {
-                    <p class="faint">Услуги: @string.Join(", ", master.MasterServices.Select(ms => ms.Service.Name))</p>
-                }
-            </article>
+            <dt>Телефон</dt>
+            <dd class="tnum">
+                <a href="tel:@Model.Branch.Phone.Replace(" ", "").Replace("(", "").Replace(")", "").Replace("-", "")">@Model.Branch.Phone</a>
+            </dd>
         }
-    </div>
-}
+    </dl>
+</div>
+
+<section style="margin-top: var(--space-6);" aria-labelledby="masters-heading">
+    <h2 id="masters-heading">Мастера филиала</h2>
+
+    @if (Model.Masters.Count == 0)
+    {
+        <p class="muted">В этом филиале пока нет мастеров.</p>
+    }
+    else
+    {
+        <div class="grid-3" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); margin-top: var(--space-4);">
+            @foreach (var master in Model.Masters)
+            {
+                <article class="card">
+                    <h3>@master.Persona.FullName</h3>
+                    @if (!string.IsNullOrWhiteSpace(master.Bio))
+                    {
+                        <p class="faint">@master.Bio</p>
+                    }
+                    @if (master.MasterServices.Any())
+                    {
+                        <p class="faint">Услуги: @string.Join(", ", master.MasterServices.Select(ms => ms.Service.Name))</p>
+                    }
+                </article>
+            }
+        </div>
+    }
+</section>
 
 <p style="margin-top: var(--space-5);"><a asp-page="/Branches/Index">← Все филиалы</a></p>

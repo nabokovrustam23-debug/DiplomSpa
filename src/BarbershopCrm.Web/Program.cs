@@ -46,6 +46,8 @@ try
         c.Timeout = TimeSpan.FromSeconds(5);
     });
 
+    builder.Services.AddScoped<IImageUploadService, LocalImageUploadService>();
+
     var app = builder.Build();
 
     app.UseSerilogRequestLogging();

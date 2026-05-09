@@ -9,34 +9,35 @@
 <p class="muted">@Model.MasterName</p>
 
 <form method="post" asp-route-id="@Model.MasterId" class="form-grid">
+    <div asp-validation-summary="ModelOnly" class="alert alert--error"></div>
+
     <div class="form-row">
         <div class="form-group">
             <label>Фамилия</label>
             <input asp-for="Input.LastName" required class="input" />
+            <span asp-validation-for="Input.LastName" class="field-error"></span>
         </div>
         <div class="form-group">
             <label>Имя</label>
             <input asp-for="Input.FirstName" required class="input" />
+            <span asp-validation-for="Input.FirstName" class="field-error"></span>
         </div>
         <div class="form-group">
             <label>Отчество</label>
             <input asp-for="Input.MiddleName" class="input" />
+            <span asp-validation-for="Input.MiddleName" class="field-error"></span>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group">
             <label>Телефон</label>
-            <input asp-for="Input.Phone" required class="input" />
+            <input asp-for="Input.Phone" type="tel" required class="input" placeholder="+7 (___) ___-__-__" />
+            <span asp-validation-for="Input.Phone" class="field-error"></span>
         </div>
         <div class="form-group">
             <label>Email</label>
             <input asp-for="Input.Email" type="email" class="input" />
-        </div>
-    </div>
-    <div class="form-row">
-        <div class="form-group">
-            <label>Должность</label>
-            <input asp-for="Input.Position" required class="input" />
+            <span asp-validation-for="Input.Email" class="field-error"></span>
         </div>
         @if (isOwner)
         {
@@ -48,12 +49,14 @@
                         <option value="@b.BranchId">@b.Name</option>
                     }
                 </select>
+                <span asp-validation-for="Input.BranchId" class="field-error"></span>
             </div>
         }
     </div>
     <div class="form-group">
         <label>Биография / о мастере</label>
         <textarea asp-for="Input.Bio" class="input" rows="3"></textarea>
+        <span asp-validation-for="Input.Bio" class="field-error"></span>
     </div>
     <div class="form-group">
         <label>
@@ -64,7 +67,7 @@
 
     <div class="divider"></div>
 
-    <h3>Привязка услуг</h3>
+    <h3>Привязка услуг <span class="faint">(минимум одна)</span></h3>
     <p class="muted">Отметьте услуги, которые выполняет этот мастер.</p>
 
     <div class="checkbox-grid">
@@ -80,6 +83,7 @@
             </label>
         }
     </div>
+    <span asp-validation-for="Input.SelectedServiceIds" class="field-error"></span>
 
     <div style="margin-top: var(--space-4);">
         <button type="submit" class="btn">Сохранить</button>

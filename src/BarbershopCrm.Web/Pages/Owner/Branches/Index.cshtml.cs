@@ -1,9 +1,11 @@
+using System.ComponentModel.DataAnnotations;
 using BarbershopCrm.Domain.Entities;
 using BarbershopCrm.Domain.Enums;
 using BarbershopCrm.Infrastructure.Auth;
 using BarbershopCrm.Infrastructure.Data;
 using BarbershopCrm.Web.Auth;
 using BarbershopCrm.Web.Pages;
+using BarbershopCrm.Web.Validation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,6 +45,8 @@ public class IndexModel : AppPageModel
         {
             Name = Input.Name.Trim(),
             Address = Input.Address.Trim(),
+            Latitude = Input.Latitude,
+            Longitude = Input.Longitude,
             Phone = string.IsNullOrWhiteSpace(Input.Phone) ? null : Input.Phone.Trim(),
             OpeningTime = TimeOnly.Parse(Input.OpeningTime),
             ClosingTime = TimeOnly.Parse(Input.ClosingTime),
@@ -68,10 +72,24 @@ public class IndexModel : AppPageModel
 
     public class BranchInput
     {
+        [Required(ErrorMessage = "Введите название филиала.")]
+        [StringLength(120, MinimumLength = 2)]
         public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Введите адрес.")]
+        [StringLength(300, MinimumLength = 5)]
         public string Address { get; set; } = string.Empty;
+
+        [RegularExpression(PhoneValidation.RussianPhonePattern, ErrorMessage = PhoneValidation.ErrorMessage)]
         public string? Phone { get; set; }
+
+        [Range(-90, 90)] public double? Latitude { get; set; }
+        [Range(-180, 180)] public double? Longitude { get; set; }
+
+        [Required, RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Время в формате ЧЧ:ММ.")]
         public string OpeningTime { get; set; } = "10:00";
+
+        [Required, RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Время в формате ЧЧ:ММ.")]
         public string ClosingTime { get; set; } = "22:00";
     }
 }

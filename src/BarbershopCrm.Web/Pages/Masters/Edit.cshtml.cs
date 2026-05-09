@@ -1,9 +1,11 @@
+using System.ComponentModel.DataAnnotations;
 using BarbershopCrm.Domain.Entities;
 using BarbershopCrm.Domain.Enums;
 using BarbershopCrm.Infrastructure.Auth;
 using BarbershopCrm.Infrastructure.Data;
 using BarbershopCrm.Web.Auth;
 using BarbershopCrm.Web.Pages;
+using BarbershopCrm.Web.Validation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,6 +55,12 @@ public class EditModel : AppPageModel
         MasterId = id;
         MasterName = master.Persona.FullName;
 
+        if (Input.SelectedServiceIds is null || Input.SelectedServiceIds.Length == 0)
+        {
+            ModelState.AddModelError("Input.SelectedServiceIds",
+                "Выберите минимум одну услугу, которую выполняет мастер.");
+        }
+
         if (!ModelState.IsValid)
         {
             await LoadLookups(ct);
@@ -64,7 +72,6 @@ public class EditModel : AppPageModel
         master.Persona.MiddleName = string.IsNullOrWhiteSpace(Input.MiddleName) ? null : Input.MiddleName.Trim();
         master.Persona.Phone = Input.Phone.Trim();
         master.Persona.Email = string.IsNullOrWhiteSpace(Input.Email) ? null : Input.Email.Trim();
-        master.Position = Input.Position.Trim();
         master.Bio = string.IsNullOrWhiteSpace(Input.Bio) ? null : Input.Bio.Trim();
         master.IsActive = Input.IsActive;
 
@@ -122,7 +129,6 @@ public class EditModel : AppPageModel
             MiddleName = master.Persona.MiddleName,
             Phone = master.Persona.Phone,
             Email = master.Persona.Email,
-            Position = master.Position,
             Bio = master.Bio,
             IsActive = master.IsActive,
             BranchId = master.BranchId,
@@ -147,13 +153,27 @@ public class EditModel : AppPageModel
 
     public class MasterEditInput
     {
+        [Required(ErrorMessage = "Введите фамилию.")]
+        [StringLength(60, MinimumLength = 1)]
         public string LastName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Введите имя.")]
+        [StringLength(60, MinimumLength = 1)]
         public string FirstName { get; set; } = string.Empty;
+
+        [StringLength(60)]
         public string? MiddleName { get; set; }
+
+        [Required(ErrorMessage = "Введите телефон.")]
+        [RegularExpression(PhoneValidation.RussianPhonePattern, ErrorMessage = PhoneValidation.ErrorMessage)]
         public string Phone { get; set; } = string.Empty;
+
+        [EmailAddress(ErrorMessage = "Некорректный email.")]
         public string? Email { get; set; }
-        public string Position { get; set; } = string.Empty;
+
+        [StringLength(2000)]
         public string? Bio { get; set; }
+
         public bool IsActive { get; set; } = true;
         public int? BranchId { get; set; }
         public int[] SelectedServiceIds { get; set; } = Array.Empty<int>();

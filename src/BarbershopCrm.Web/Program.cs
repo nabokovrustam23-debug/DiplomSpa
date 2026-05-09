@@ -2,7 +2,9 @@ using BarbershopCrm.Infrastructure;
 using BarbershopCrm.Infrastructure.Auth;
 using BarbershopCrm.Infrastructure.Data;
 using BarbershopCrm.Infrastructure.Security;
+using BarbershopCrm.Domain.Enums;
 using BarbershopCrm.Web.Auth;
+using BarbershopCrm.Web.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -31,6 +33,19 @@ try
 
     builder.Services.AddAntiforgery();
 
+    builder.Services.Configure<DaDataOptions>(builder.Configuration.GetSection(DaDataOptions.SectionName));
+    builder.Services.PostConfigure<DaDataOptions>(opt =>
+    {
+        // Allow env var override (DADATA_API_KEY) for prod / dev secrets.
+        var fromEnv = Environment.GetEnvironmentVariable("DADATA_API_KEY");
+        if (!string.IsNullOrWhiteSpace(fromEnv))
+            opt.ApiKey = fromEnv;
+    });
+    builder.Services.AddHttpClient<IAddressSuggestService, DaDataAddressSuggestService>(c =>
+    {
+        c.Timeout = TimeSpan.FromSeconds(5);
+    });
+
     var app = builder.Build();
 
     app.UseSerilogRequestLogging();
@@ -49,6 +64,25 @@ try
 
     app.UseAuthorization();
     app.MapRazorPages();
+
+    app.MapGet("/api/address/suggest", async (
+        string? q,
+        IAddressSuggestService svc,
+        ICurrentUserAccessor currentUser,
+        CancellationToken ct) =>
+    {
+        if (!currentUser.IsAuthenticated)
+            return Results.StatusCode(StatusCodes.Status401Unauthorized);
+
+        if (!currentUser.IsInRole(RoleCode.Owner))
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
+
+        if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 3)
+            return Results.Ok(Array.Empty<AddressSuggestion>());
+
+        var items = await svc.SuggestAsync(q.Trim(), ct);
+        return Results.Ok(items);
+    });
 
     if (app.Environment.IsDevelopment())
     {

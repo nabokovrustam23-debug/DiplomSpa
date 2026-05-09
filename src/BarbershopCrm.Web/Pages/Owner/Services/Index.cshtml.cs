@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BarbershopCrm.Domain.Entities;
 using BarbershopCrm.Domain.Enums;
 using BarbershopCrm.Infrastructure.Auth;
@@ -67,9 +68,17 @@ public class IndexModel : AppPageModel
 
     public class ServiceInput
     {
+        [Required(ErrorMessage = "Введите название услуги.")]
+        [StringLength(120, MinimumLength = 2)]
         public string Name { get; set; } = string.Empty;
+
+        [StringLength(500)]
         public string? Description { get; set; }
+
+        [Range(15, 480, ErrorMessage = "Длительность от 15 до 480 минут.")]
         public int DurationMinutes { get; set; } = 30;
-        public decimal Price { get; set; }
+
+        [Range(typeof(decimal), "200", "1000000", ErrorMessage = "Цена не может быть меньше 200 ₽.")]
+        public decimal Price { get; set; } = 200m;
     }
 }

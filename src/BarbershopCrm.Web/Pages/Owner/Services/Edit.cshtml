@@ -7,22 +7,28 @@
 <h1>Редактирование услуги</h1>
 
 <form method="post" asp-route-id="@Model.ServiceId" class="form-grid">
+    <div asp-validation-summary="ModelOnly" class="alert alert--error"></div>
+
     <div class="form-group">
         <label>Название</label>
         <input asp-for="Input.Name" required class="input" />
+        <span asp-validation-for="Input.Name" class="field-error"></span>
     </div>
     <div class="form-group">
         <label>Описание</label>
         <input asp-for="Input.Description" class="input" />
+        <span asp-validation-for="Input.Description" class="field-error"></span>
     </div>
     <div class="form-row">
         <div class="form-group">
             <label>Длительность (мин)</label>
-            <input asp-for="Input.DurationMinutes" type="number" min="15" step="15" required class="input" />
+            <input asp-for="Input.DurationMinutes" type="number" min="15" step="15" max="480" required class="input" />
+            <span asp-validation-for="Input.DurationMinutes" class="field-error"></span>
         </div>
         <div class="form-group">
-            <label>Цена (₽)</label>
-            <input asp-for="Input.Price" type="number" min="0" step="50" required class="input" />
+            <label>Цена (₽) <span class="faint">— минимум 200, шаг 50</span></label>
+            <input asp-for="Input.Price" type="number" min="200" step="50" required class="input" />
+            <span asp-validation-for="Input.Price" class="field-error"></span>
         </div>
     </div>
     <div class="form-group">

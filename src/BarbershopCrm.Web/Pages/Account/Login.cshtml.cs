@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BarbershopCrm.Infrastructure.Auth;
+using BarbershopCrm.Infrastructure.Data;
 using BarbershopCrm.Web.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -11,11 +12,13 @@ public sealed class LoginModel : PageModel
 {
     private readonly IUserAuthService _auth;
     private readonly AuthOptions _options;
+    private readonly IWebHostEnvironment _env;
 
-    public LoginModel(IUserAuthService auth, IOptions<AuthOptions> options)
+    public LoginModel(IUserAuthService auth, IOptions<AuthOptions> options, IWebHostEnvironment env)
     {
         _auth = auth;
         _options = options.Value;
+        _env = env;
     }
 
     [BindProperty]
@@ -25,6 +28,17 @@ public sealed class LoginModel : PageModel
     public string? ReturnUrl { get; set; }
 
     public string? ErrorMessage { get; set; }
+
+    public bool ShowQuickLogin => _env.IsDevelopment();
+
+    public IReadOnlyList<QuickLoginAccount> QuickAccounts { get; } = new[]
+    {
+        new QuickLoginAccount("owner@thq.ru",   "Владелец",       "доступ ко всем филиалам"),
+        new QuickLoginAccount("admin1@thq.ru",  "Админ филиала 1", "Тихий час — Центр"),
+        new QuickLoginAccount("admin2@thq.ru",  "Админ филиала 2", "Тихий час — Фестивальный"),
+        new QuickLoginAccount("master1@thq.ru", "Мастер",         "филиал Центр, все услуги"),
+        new QuickLoginAccount("client1@thq.ru", "Клиент",         "обычный клиент"),
+    };
 
     public IActionResult OnGet()
     {
@@ -41,9 +55,29 @@ public sealed class LoginModel : PageModel
         if (!ModelState.IsValid)
             return Page();
 
+        return await DoLoginAsync(Input.Email, Input.Password, ct);
+    }
+
+    public async Task<IActionResult> OnPostQuickAsync(string email, CancellationToken ct)
+    {
+        if (!_env.IsDevelopment())
+            return NotFound();
+
+        if (string.IsNullOrWhiteSpace(email) || !QuickAccounts.Any(a => a.Email == email))
+        {
+            ErrorMessage = "Учётная запись не найдена.";
+            return Page();
+        }
+
+        ModelState.Clear();
+        return await DoLoginAsync(email, SeedDevData.TestPassword, ct);
+    }
+
+    private async Task<IActionResult> DoLoginAsync(string email, string password, CancellationToken ct)
+    {
         var result = await _auth.LoginAsync(
-            Input.Email,
-            Input.Password,
+            email,
+            password,
             HttpContext.Request.Headers.UserAgent.ToString(),
             HttpContext.Connection.RemoteIpAddress?.ToString(),
             ct);
@@ -84,4 +118,6 @@ public sealed class LoginModel : PageModel
         [Display(Name = "Пароль")]
         public string Password { get; set; } = string.Empty;
     }
+
+    public sealed record QuickLoginAccount(string Email, string Title, string Subtitle);
 }

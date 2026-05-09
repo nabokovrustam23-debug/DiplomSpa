@@ -1,0 +1,51 @@
+@page
+@model BarbershopCrm.Web.Pages.Profile.IndexModel
+@{
+    ViewData["Title"] = "Личный кабинет";
+}
+
+<section>
+    <h1>Личный кабинет</h1>
+    <p class="muted">Что доступно дальше — зависит от вашей роли.</p>
+
+    <div class="card profile-card">
+        <dl class="profile-list">
+            <dt>ФИО</dt>
+            <dd>@Model.Current!.FullName</dd>
+
+            <dt>Email</dt>
+            <dd>
+                @Model.Current.Email
+                @if (Model.Current.IsEmailConfirmed)
+                {
+                    <span class="badge badge--ok">подтверждён</span>
+                }
+                else
+                {
+                    <span class="badge badge--warn">не подтверждён</span>
+                    <a asp-page="/Account/ResendConfirmationEmail"
+                       asp-route-email="@Model.Current.Email"
+                       class="btn-link">Отправить ссылку</a>
+                }
+            </dd>
+
+            <dt>Логин</dt>
+            <dd>@Model.Current.Login</dd>
+
+            <dt>Роль</dt>
+            <dd>@Model.RoleLabel</dd>
+
+            @if (Model.Current.BranchId is { } branchId)
+            {
+                <dt>Филиал</dt>
+                <dd>#@branchId</dd>
+            }
+        </dl>
+    </div>
+
+    <div class="auth-actions">
+        <form method="post" asp-page="/Account/Logout">
+            <button class="btn" type="submit">Выйти из аккаунта</button>
+        </form>
+    </div>
+</section>

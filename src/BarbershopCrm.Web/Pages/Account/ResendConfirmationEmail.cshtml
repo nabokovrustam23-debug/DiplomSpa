@@ -1,0 +1,37 @@
+@page
+@model BarbershopCrm.Web.Pages.Account.ResendConfirmationEmailModel
+@{
+    ViewData["Title"] = "Отправить ссылку подтверждения";
+}
+
+<section class="auth-shell">
+    <div class="auth-card card">
+        <h1>Отправить письмо подтверждения</h1>
+
+        @if (Model.IsSent)
+        {
+            <p class="muted">
+                Если такой email зарегистрирован и ещё не подтверждён, мы отправили на него письмо
+                со ссылкой. Ссылка действительна 24 часа.
+            </p>
+            <div class="auth-actions">
+                <a asp-page="/Account/Login" class="btn btn--primary">К входу</a>
+            </div>
+        }
+        else
+        {
+            <p class="muted">Введите email, на который мы должны выслать ссылку.</p>
+            <form method="post" novalidate>
+                <div class="field">
+                    <label asp-for="Email">Email</label>
+                    <input asp-for="Email" type="email" autocomplete="email" required autofocus />
+                    <span asp-validation-for="Email" class="field-error"></span>
+                </div>
+                <div class="auth-actions">
+                    <button type="submit" class="btn btn--primary">Отправить ссылку</button>
+                    <a asp-page="/Account/Login" class="btn-link">Отмена</a>
+                </div>
+            </form>
+        }
+    </div>
+</section>

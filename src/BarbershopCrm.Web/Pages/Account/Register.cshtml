@@ -1,0 +1,74 @@
+@page
+@model BarbershopCrm.Web.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Регистрация клиента";
+}
+
+<section class="auth-shell">
+    <div class="auth-card card">
+        <h1>Регистрация клиента</h1>
+        <p class="muted">Создайте аккаунт, чтобы записываться онлайн и видеть историю визитов.</p>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="flash flash--error">@Model.ErrorMessage</div>
+        }
+
+        <form method="post" novalidate>
+            <div class="field-row">
+                <div class="field">
+                    <label asp-for="Input.LastName">Фамилия</label>
+                    <input asp-for="Input.LastName" autocomplete="family-name" required />
+                    <span asp-validation-for="Input.LastName" class="field-error"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.FirstName">Имя</label>
+                    <input asp-for="Input.FirstName" autocomplete="given-name" required />
+                    <span asp-validation-for="Input.FirstName" class="field-error"></span>
+                </div>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.MiddleName">Отчество <span class="faint">— по желанию</span></label>
+                <input asp-for="Input.MiddleName" autocomplete="additional-name" />
+                <span asp-validation-for="Input.MiddleName" class="field-error"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Phone">Телефон</label>
+                <input asp-for="Input.Phone" type="tel" autocomplete="tel" placeholder="+7 (___) ___-__-__" required />
+                <span asp-validation-for="Input.Phone" class="field-error"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Email">Email</label>
+                <input asp-for="Input.Email" type="email" autocomplete="email" required />
+                <span asp-validation-for="Input.Email" class="field-error"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Password">Пароль</label>
+                <input asp-for="Input.Password" type="password" autocomplete="new-password" required />
+                <span asp-validation-for="Input.Password" class="field-error"></span>
+                <p class="faint">Не короче 8 символов.</p>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.PasswordRepeat">Повторите пароль</label>
+                <input asp-for="Input.PasswordRepeat" type="password" autocomplete="new-password" required />
+                <span asp-validation-for="Input.PasswordRepeat" class="field-error"></span>
+            </div>
+
+            <label class="checkbox">
+                <input asp-for="Input.AcceptTerms" type="checkbox" required />
+                <span>Соглашаюсь с <a href="#" target="_blank">обработкой персональных данных</a> по 152-ФЗ.</span>
+            </label>
+            <span asp-validation-for="Input.AcceptTerms" class="field-error"></span>
+
+            <div class="auth-actions">
+                <button type="submit" class="btn btn--primary">Создать аккаунт</button>
+                <a asp-page="/Account/Login" class="btn-link">Уже есть аккаунт</a>
+            </div>
+        </form>
+    </div>
+</section>

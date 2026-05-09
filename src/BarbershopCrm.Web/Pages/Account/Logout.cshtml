@@ -1,0 +1,18 @@
+@page
+@model BarbershopCrm.Web.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "Выход";
+}
+
+<section class="auth-shell">
+    <div class="auth-card card">
+        <h1>Выход из аккаунта</h1>
+        <p class="muted">Подтвердите выход — текущая сессия будет завершена.</p>
+        <form method="post">
+            <div class="auth-actions">
+                <button type="submit" class="btn btn--primary">Выйти</button>
+                <a asp-page="/Index" class="btn-link">Отмена</a>
+            </div>
+        </form>
+    </div>
+</section>

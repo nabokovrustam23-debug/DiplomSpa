@@ -1,0 +1,22 @@
+@page
+@model BarbershopCrm.Web.Pages.Account.RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Подтвердите email";
+}
+
+<section class="auth-shell">
+    <div class="auth-card card">
+        <h1>Аккаунт создан</h1>
+        <p class="muted">
+            На адрес <strong>@Model.Email</strong> отправлено письмо со ссылкой
+            для подтверждения email. Ссылка действительна 24 часа.
+        </p>
+        <p class="faint">
+            Письмо не пришло? Проверьте папку «Спам» — или
+            <a asp-page="/Account/ResendConfirmationEmail" asp-route-email="@Model.Email">отправьте ссылку ещё раз</a>.
+        </p>
+        <div class="auth-actions">
+            <a asp-page="/Account/Login" class="btn btn--primary">К странице входа</a>
+        </div>
+    </div>
+</section>

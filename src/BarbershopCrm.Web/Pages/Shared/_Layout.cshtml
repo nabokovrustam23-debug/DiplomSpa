@@ -1,3 +1,4 @@
+@inject ICurrentUserAccessor CurrentUserAccessor
 @{
     var theme = Context.Request.Cookies["theme"];
     if (theme != "light" && theme != "dark") theme = "dark";
@@ -5,6 +6,8 @@
     var nextTheme = theme == "dark" ? "light" : "dark";
     var nextThemeLabel = nextTheme == "dark" ? "Тёмная" : "Светлая";
     var returnUrl = Context.Request.Path + Context.Request.QueryString;
+
+    var current = CurrentUserAccessor.User;
 }
 <!DOCTYPE html>
 <html lang="ru" data-theme="@theme">
@@ -32,6 +35,21 @@
                     <a href="#">Услуги</a>
                     <a href="#">Филиалы</a>
                     <a href="#">Записаться</a>
+
+                    @if (current is null)
+                    {
+                        <a asp-page="/Account/Login">Войти</a>
+                    }
+                    else
+                    {
+                        <a asp-page="/Profile/Index" class="user-pill" title="@current.RoleCode">
+                            @current.FullName
+                        </a>
+                        <form method="post" asp-page="/Account/Logout" class="logout-form">
+                            <button type="submit" class="btn-link">Выход</button>
+                        </form>
+                    }
+
                     <a class="theme-toggle"
                        asp-page="/Theme/Set"
                        asp-route-value="@nextTheme"

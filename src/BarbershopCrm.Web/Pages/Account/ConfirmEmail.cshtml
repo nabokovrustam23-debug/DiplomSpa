@@ -1,0 +1,27 @@
+@page
+@model BarbershopCrm.Web.Pages.Account.ConfirmEmailModel
+@{
+    ViewData["Title"] = "Подтверждение email";
+}
+
+<section class="auth-shell">
+    <div class="auth-card card">
+        @if (Model.IsSuccess)
+        {
+            <h1>Email подтверждён</h1>
+            <p class="muted">Спасибо, ваш адрес почты подтверждён. Теперь вы можете записываться онлайн.</p>
+            <div class="auth-actions">
+                <a asp-page="/Account/Login" class="btn btn--primary">Войти</a>
+            </div>
+        }
+        else
+        {
+            <h1>Ссылка недействительна</h1>
+            <p class="muted">@Model.ErrorMessage</p>
+            <div class="auth-actions">
+                <a asp-page="/Account/ResendConfirmationEmail" class="btn btn--primary">Отправить ссылку ещё раз</a>
+                <a asp-page="/Account/Login" class="btn-link">К входу</a>
+            </div>
+        }
+    </div>
+</section>

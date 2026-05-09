@@ -1,0 +1,43 @@
+@page
+@model BarbershopCrm.Web.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Вход в кабинет";
+}
+
+<section class="auth-shell">
+    <div class="auth-card card">
+        <h1>Вход в кабинет</h1>
+        <p class="muted">Введите email и пароль, привязанные к аккаунту в «Тихом часе».</p>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="flash flash--error">@Model.ErrorMessage</div>
+        }
+
+        <form method="post" novalidate>
+            <input asp-for="ReturnUrl" type="hidden" />
+
+            <div class="field">
+                <label asp-for="Input.Email">Email</label>
+                <input asp-for="Input.Email" type="email" autocomplete="username" autofocus required />
+                <span asp-validation-for="Input.Email" class="field-error"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Password">Пароль</label>
+                <input asp-for="Input.Password" type="password" autocomplete="current-password" required />
+                <span asp-validation-for="Input.Password" class="field-error"></span>
+            </div>
+
+            <div class="auth-actions">
+                <button type="submit" class="btn btn--primary">Войти</button>
+                <a asp-page="/Account/ForgotPassword" class="btn-link">Забыли пароль?</a>
+            </div>
+        </form>
+
+        <div class="auth-secondary">
+            Нет аккаунта?
+            <a asp-page="/Account/Register">Зарегистрироваться</a>
+        </div>
+    </div>
+</section>

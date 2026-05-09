@@ -8,7 +8,7 @@
     <h1>Тихий час</h1>
     <p>Сеть барбершопов в Краснодаре. CRM-система управляет филиалами, расписанием мастеров, онлайн-записью клиентов и аналитикой по сети.</p>
     <a class="btn" href="#">Записаться онлайн</a>
-    <a class="btn btn--outline" href="#" style="margin-left: var(--space-3)">Войти в кабинет</a>
+    <a class="btn btn--outline" asp-page="/Account/Login" style="margin-left: var(--space-3)">Войти в кабинет</a>
 </section>
 
 <div class="divider"></div>
@@ -51,12 +51,14 @@
 <div class="divider"></div>
 
 <section class="card">
-    <h3>Состояние каркаса</h3>
-    <p class="muted">Это стартовая страница для проверки палитры и подключения к БД. Бизнес-логика (вход, регистрация, онлайн-запись) добавляется в следующих PR по модулям M1–M6 из <code>docs/analysis.md</code>.</p>
+    <h3>Состояние модулей</h3>
+    <p class="muted">Реализуется по плану из <code>docs/analysis.md</code>. Бизнес-логика добавляется по одному модулю на PR.</p>
     <p>
-        <span class="badge success">EF Core ✓</span>
-        <span class="badge info">SQLite ✓</span>
-        <span class="badge warning">PBKDF2 готов</span>
-        <span class="badge">Razor Pages</span>
+        <span class="badge success">M1 · Auth ✓</span>
+        <span class="badge">M2 · Каталог</span>
+        <span class="badge">M3 · Расписание</span>
+        <span class="badge">M4 · Записи</span>
+        <span class="badge">M5 · Аналитика</span>
+        <span class="badge">M6 · Уведомления</span>
     </p>
 </section>

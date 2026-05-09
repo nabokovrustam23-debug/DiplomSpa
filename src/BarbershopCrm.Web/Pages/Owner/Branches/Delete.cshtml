@@ -1,0 +1,17 @@
+@page "{id:int}"
+@model BarbershopCrm.Web.Pages.Owner.Branches.DeleteModel
+@{
+    ViewData["Title"] = "Закрытие филиала";
+}
+
+<h1>Закрытие филиала</h1>
+
+<div class="card" style="max-width: 500px;">
+    <p>Вы уверены, что хотите деактивировать филиал <strong>«@Model.BranchName»</strong>?</p>
+    <p class="muted">Филиал не будет удалён, но перестанет отображаться в публичных списках. Его можно будет восстановить через редактирование.</p>
+
+    <form method="post" asp-route-id="@Model.BranchId" style="margin-top: var(--space-4);">
+        <button type="submit" class="btn btn--danger">Деактивировать</button>
+        <a asp-page="Index" class="btn btn--outline" style="margin-left: var(--space-3);">Отмена</a>
+    </form>
+</div>

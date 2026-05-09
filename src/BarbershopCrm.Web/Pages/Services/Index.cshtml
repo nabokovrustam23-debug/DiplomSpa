@@ -1,0 +1,23 @@
+@page
+@model BarbershopCrm.Web.Pages.Services.IndexModel
+@{
+    ViewData["Title"] = "Услуги";
+}
+
+<h1>Прайс-лист</h1>
+<p class="muted">Единый прайс на все филиалы сети «Тихий час».</p>
+
+<div class="grid-3" style="margin-top: var(--space-4);">
+    @foreach (var service in Model.Services)
+    {
+        <article class="card service-card">
+            <h3>@service.Name</h3>
+            @if (!string.IsNullOrWhiteSpace(service.Description))
+            {
+                <p class="muted">@service.Description</p>
+            }
+            <p class="faint tnum">@service.DurationMinutes мин</p>
+            <div class="price tnum">@service.Price.ToString("0") ₽</div>
+        </article>
+    }
+</div>

@@ -1,0 +1,40 @@
+@page "{id:int}"
+@model BarbershopCrm.Web.Pages.Owner.Branches.EditModel
+@{
+    ViewData["Title"] = "Редактирование филиала";
+}
+
+<h1>Редактирование филиала</h1>
+
+<form method="post" asp-route-id="@Model.BranchId" class="form-grid">
+    <div class="form-group">
+        <label>Название</label>
+        <input asp-for="Input.Name" required class="input" />
+    </div>
+    <div class="form-group">
+        <label>Адрес</label>
+        <input asp-for="Input.Address" required class="input" />
+    </div>
+    <div class="form-group">
+        <label>Телефон</label>
+        <input asp-for="Input.Phone" class="input" />
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Открытие</label>
+            <input asp-for="Input.OpeningTime" type="time" required class="input" />
+        </div>
+        <div class="form-group">
+            <label>Закрытие</label>
+            <input asp-for="Input.ClosingTime" type="time" required class="input" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>
+            <input asp-for="Input.IsActive" type="checkbox" />
+            Активен
+        </label>
+    </div>
+    <button type="submit" class="btn">Сохранить</button>
+    <a asp-page="Index" class="btn btn--outline" style="margin-left: var(--space-3);">Отмена</a>
+</form>

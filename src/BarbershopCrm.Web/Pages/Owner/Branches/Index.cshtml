@@ -1,0 +1,74 @@
+@page
+@model BarbershopCrm.Web.Pages.Owner.Branches.IndexModel
+@{
+    ViewData["Title"] = "Управление филиалами";
+}
+
+<h1>Управление филиалами</h1>
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert--success">@Model.SuccessMessage</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Адрес</th>
+            <th>Часы работы</th>
+            <th>Телефон</th>
+            <th>Статус</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var b in Model.Branches)
+        {
+            <tr class="@(b.IsActive ? "" : "row--inactive")">
+                <td>@b.Name</td>
+                <td>@b.Address</td>
+                <td class="tnum">@b.OpeningTime.ToString("HH:mm") – @b.ClosingTime.ToString("HH:mm")</td>
+                <td class="tnum">@(b.Phone ?? "—")</td>
+                <td>@(b.IsActive ? "Активен" : "Закрыт")</td>
+                <td>
+                    <a asp-page="Edit" asp-route-id="@b.BranchId" class="btn btn--sm">Изменить</a>
+                    @if (b.IsActive)
+                    {
+                        <a asp-page="Delete" asp-route-id="@b.BranchId" class="btn btn--sm btn--danger">Закрыть</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="divider"></div>
+
+<h2>Добавить филиал</h2>
+
+<form method="post" class="form-grid">
+    <div class="form-group">
+        <label>Название</label>
+        <input asp-for="Input.Name" required class="input" placeholder="Тихий час — …" />
+    </div>
+    <div class="form-group">
+        <label>Адрес</label>
+        <input asp-for="Input.Address" required class="input" placeholder="Краснодар, ул. …" />
+    </div>
+    <div class="form-group">
+        <label>Телефон</label>
+        <input asp-for="Input.Phone" class="input" placeholder="+7 (861) …" />
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Открытие</label>
+            <input asp-for="Input.OpeningTime" type="time" required class="input" />
+        </div>
+        <div class="form-group">
+            <label>Закрытие</label>
+            <input asp-for="Input.ClosingTime" type="time" required class="input" />
+        </div>
+    </div>
+    <button type="submit" class="btn">Создать филиал</button>
+</form>

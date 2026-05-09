@@ -1,0 +1,44 @@
+@page "/Branches/{id:int}"
+@model BarbershopCrm.Web.Pages.Branches.DetailsModel
+@{
+    ViewData["Title"] = Model.Branch.Name;
+}
+
+<h1>@Model.Branch.Name</h1>
+<p class="muted">@Model.Branch.Address</p>
+<p class="faint tnum">Часы работы: @Model.Branch.OpeningTime.ToString("HH:mm") – @Model.Branch.ClosingTime.ToString("HH:mm")</p>
+@if (!string.IsNullOrWhiteSpace(Model.Branch.Phone))
+{
+    <p class="muted tnum">Телефон: @Model.Branch.Phone</p>
+}
+
+<div class="divider"></div>
+
+<h2>Мастера филиала</h2>
+
+@if (Model.Masters.Count == 0)
+{
+    <p class="muted">В этом филиале пока нет мастеров.</p>
+}
+else
+{
+    <div class="grid-3" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); margin-top: var(--space-4);">
+        @foreach (var master in Model.Masters)
+        {
+            <article class="card">
+                <h3>@master.Persona.FullName</h3>
+                <p class="muted">@master.Position</p>
+                @if (!string.IsNullOrWhiteSpace(master.Bio))
+                {
+                    <p class="faint">@master.Bio</p>
+                }
+                @if (master.MasterServices.Any())
+                {
+                    <p class="faint">Услуги: @string.Join(", ", master.MasterServices.Select(ms => ms.Service.Name))</p>
+                }
+            </article>
+        }
+    </div>
+}
+
+<p style="margin-top: var(--space-5);"><a asp-page="/Branches/Index">← Все филиалы</a></p>

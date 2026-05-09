@@ -1,0 +1,92 @@
+@page
+@model BarbershopCrm.Web.Pages.Masters.ManageModel
+@{
+    ViewData["Title"] = "Управление мастерами";
+    var isOwner = Model.Current?.RoleCode == RoleCode.Owner;
+}
+
+<h1>Управление мастерами</h1>
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert--success">@Model.SuccessMessage</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ФИО</th>
+            <th>Филиал</th>
+            <th>Должность</th>
+            <th>Услуги</th>
+            <th>Статус</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var m in Model.Masters)
+        {
+            <tr class="@(m.IsActive ? "" : "row--inactive")">
+                <td>@m.Persona.FullName</td>
+                <td>@m.Branch.Name</td>
+                <td>@m.Position</td>
+                <td class="faint">@(m.MasterServices.Any() ? string.Join(", ", m.MasterServices.Select(ms => ms.Service.Name)) : "—")</td>
+                <td>@(m.IsActive ? "Активен" : "Неактивен")</td>
+                <td>
+                    <a asp-page="Edit" asp-route-id="@m.MasterId" class="btn btn--sm">Изменить</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="divider"></div>
+
+<h2>Добавить мастера</h2>
+
+<form method="post" class="form-grid">
+    <div class="form-row">
+        <div class="form-group">
+            <label>Фамилия</label>
+            <input asp-for="Input.LastName" required class="input" />
+        </div>
+        <div class="form-group">
+            <label>Имя</label>
+            <input asp-for="Input.FirstName" required class="input" />
+        </div>
+        <div class="form-group">
+            <label>Отчество</label>
+            <input asp-for="Input.MiddleName" class="input" />
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Телефон</label>
+            <input asp-for="Input.Phone" required class="input" placeholder="+7…" />
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input asp-for="Input.Email" type="email" class="input" />
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Должность</label>
+            <input asp-for="Input.Position" required class="input" />
+        </div>
+        @if (isOwner)
+        {
+            <div class="form-group">
+                <label>Филиал</label>
+                <select asp-for="Input.BranchId" class="input" required>
+                    <option value="">— выберите —</option>
+                    @foreach (var b in Model.Branches)
+                    {
+                        <option value="@b.BranchId">@b.Name</option>
+                    }
+                </select>
+            </div>
+        }
+    </div>
+    <button type="submit" class="btn">Добавить мастера</button>
+</form>

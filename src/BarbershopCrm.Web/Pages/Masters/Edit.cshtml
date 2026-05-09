@@ -1,0 +1,88 @@
+@page "{id:int}"
+@model BarbershopCrm.Web.Pages.Masters.EditModel
+@{
+    ViewData["Title"] = $"Редактирование мастера — {Model.MasterName}";
+    var isOwner = Model.Current?.RoleCode == RoleCode.Owner;
+}
+
+<h1>Редактирование мастера</h1>
+<p class="muted">@Model.MasterName</p>
+
+<form method="post" asp-route-id="@Model.MasterId" class="form-grid">
+    <div class="form-row">
+        <div class="form-group">
+            <label>Фамилия</label>
+            <input asp-for="Input.LastName" required class="input" />
+        </div>
+        <div class="form-group">
+            <label>Имя</label>
+            <input asp-for="Input.FirstName" required class="input" />
+        </div>
+        <div class="form-group">
+            <label>Отчество</label>
+            <input asp-for="Input.MiddleName" class="input" />
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Телефон</label>
+            <input asp-for="Input.Phone" required class="input" />
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input asp-for="Input.Email" type="email" class="input" />
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Должность</label>
+            <input asp-for="Input.Position" required class="input" />
+        </div>
+        @if (isOwner)
+        {
+            <div class="form-group">
+                <label>Филиал</label>
+                <select asp-for="Input.BranchId" class="input" required>
+                    @foreach (var b in Model.Branches)
+                    {
+                        <option value="@b.BranchId">@b.Name</option>
+                    }
+                </select>
+            </div>
+        }
+    </div>
+    <div class="form-group">
+        <label>Биография / о мастере</label>
+        <textarea asp-for="Input.Bio" class="input" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+        <label>
+            <input asp-for="Input.IsActive" type="checkbox" />
+            Активен
+        </label>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3>Привязка услуг</h3>
+    <p class="muted">Отметьте услуги, которые выполняет этот мастер.</p>
+
+    <div class="checkbox-grid">
+        @foreach (var service in Model.AllServices)
+        {
+            var isChecked = Model.Input.SelectedServiceIds.Contains(service.ServiceId);
+            <label class="checkbox-item">
+                <input type="checkbox"
+                       name="Input.SelectedServiceIds"
+                       value="@service.ServiceId"
+                       @(isChecked ? "checked" : "") />
+                @service.Name <span class="faint">(@service.DurationMinutes мин, @service.Price.ToString("0") ₽)</span>
+            </label>
+        }
+    </div>
+
+    <div style="margin-top: var(--space-4);">
+        <button type="submit" class="btn">Сохранить</button>
+        <a asp-page="Manage" class="btn btn--outline" style="margin-left: var(--space-3);">Отмена</a>
+    </div>
+</form>

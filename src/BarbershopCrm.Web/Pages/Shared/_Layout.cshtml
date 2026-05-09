@@ -32,9 +32,19 @@
                 </a>
                 <nav class="app-nav">
                     <a asp-page="/Index">Главная</a>
-                    <a href="#">Услуги</a>
-                    <a href="#">Филиалы</a>
+                    <a asp-page="/Services/Index">Услуги</a>
+                    <a asp-page="/Branches/Index">Филиалы</a>
                     <a href="#">Записаться</a>
+
+                    @if (current is not null && (current.RoleCode == RoleCode.Owner || current.RoleCode == RoleCode.Admin))
+                    {
+                        <a asp-page="/Masters/Manage" class="nav-manage">Мастера</a>
+                    }
+                    @if (current is not null && current.RoleCode == RoleCode.Owner)
+                    {
+                        <a asp-page="/Owner/Branches/Index" class="nav-manage">Филиалы ⚙</a>
+                        <a asp-page="/Owner/Services/Index" class="nav-manage">Услуги ⚙</a>
+                    }
 
                     @if (current is null)
                     {

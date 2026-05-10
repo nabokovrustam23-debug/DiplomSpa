@@ -1,0 +1,45 @@
+@page "/Admin/Analytics"
+@model BarbershopCrm.Web.Pages.Admin.Analytics.IndexModel
+@{
+    ViewData["Title"] = "Аналитика";
+    ViewData["ManagementTab"] = "analytics";
+}
+
+<partial name="_ManagementTabs" />
+
+<section class="card">
+    <div class="card__header">
+        <h1>Аналитика — @(Model.Snapshot?.BranchName ?? "филиал не задан")</h1>
+        <a asp-page="/Admin/Analytics/Index" asp-page-handler="Export"
+           asp-route-from="@Model.FromValue.ToString("yyyy-MM-dd")"
+           asp-route-to="@Model.ToValue.ToString("yyyy-MM-dd")"
+           class="btn btn--outline">Экспорт CSV</a>
+    </div>
+
+    @if (Model.AccessError is not null)
+    {
+        <p class="flash flash--warn">@Model.AccessError</p>
+    }
+    else
+    {
+        <form method="get" class="form-row">
+            <div class="form-group">
+                <label for="From">С</label>
+                <input id="From" name="From" type="date" class="input" value="@Model.FromValue.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="form-group">
+                <label for="To">По</label>
+                <input id="To" name="To" type="date" class="input" value="@Model.ToValue.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn--primary">Применить</button>
+                <a asp-page="/Admin/Analytics/Index" class="btn btn--outline">Сбросить</a>
+            </div>
+        </form>
+    }
+</section>
+
+@if (Model.Snapshot is not null)
+{
+    <partial name="_AnalyticsDashboard" model="Model.Snapshot" />
+}

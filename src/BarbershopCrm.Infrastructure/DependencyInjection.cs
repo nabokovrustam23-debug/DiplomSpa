@@ -1,3 +1,4 @@
+using BarbershopCrm.Infrastructure.Analytics;
 using BarbershopCrm.Infrastructure.Auth;
 using BarbershopCrm.Infrastructure.Data;
 using BarbershopCrm.Infrastructure.Email;
@@ -31,6 +32,7 @@ public static class DependencyInjection
             .ValidateOnStart();
 
         services.AddScoped<IUserAuthService, UserAuthService>();
+        services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddSingleton<IEmailSender, LogEmailSender>();
 
         return services;

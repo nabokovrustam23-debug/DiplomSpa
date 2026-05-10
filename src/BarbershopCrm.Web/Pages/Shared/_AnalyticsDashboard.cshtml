@@ -1,0 +1,145 @@
+@using BarbershopCrm.Infrastructure.Analytics
+@using System.Globalization
+@model DashboardSnapshot
+@{
+    var ru = CultureInfo.GetCultureInfo("ru-RU");
+    var byStatus = Model.ByStatus;
+    var statusBars = new (string Label, int Value, string Css)[]
+    {
+        ("Создана",     byStatus.Created,   "status-created"),
+        ("Подтверждена",byStatus.Confirmed, "status-confirmed"),
+        ("Завершена",   byStatus.Completed, "status-completed"),
+        ("Отменена",    byStatus.Cancelled, "status-cancelled"),
+        ("Не пришёл",   byStatus.NoShow,    "status-noshow"),
+    };
+    var maxStatus = Math.Max(1, statusBars.Max(x => x.Value));
+    var maxUtil = Math.Max(1m, Model.Utilization.Count == 0 ? 1m : Model.Utilization.Max(u => u.UtilizationPercent));
+    string Money(decimal v) => v.ToString("#,##0.00", ru) + " ₽";
+    string Percent(decimal v) => v.ToString("0.0", ru) + " %";
+}
+
+<div class="analytics-grid">
+    <div class="kpi">
+        <div class="kpi__label">Всего записей</div>
+        <div class="kpi__value">@Model.TotalBookings</div>
+        <div class="kpi__hint">за период @Model.From.ToString("dd.MM.yyyy") — @Model.To.ToString("dd.MM.yyyy")</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi__label">Выручка</div>
+        <div class="kpi__value">@Money(Model.Revenue)</div>
+        <div class="kpi__hint">по завершённым визитам</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi__label">Средний чек</div>
+        <div class="kpi__value">@Money(Model.AverageTicket)</div>
+        <div class="kpi__hint">@Model.CompletedVisits завершённых визитов</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi__label">Доля повторных клиентов</div>
+        <div class="kpi__value">@Percent(Model.RepeatClientsRate * 100m)</div>
+        <div class="kpi__hint">@Model.RepeatClients из @Model.ClientsWithAtLeastOneCompletedVisit</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi__label">Отмены</div>
+        <div class="kpi__value">@byStatus.Cancelled</div>
+        <div class="kpi__hint">за период</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi__label">No-show</div>
+        <div class="kpi__value">@byStatus.NoShow</div>
+        <div class="kpi__hint">за период</div>
+    </div>
+</div>
+
+<section class="card analytics-card">
+    <h2>Записи по статусам</h2>
+    @if (byStatus.Total == 0)
+    {
+        <p class="muted">За выбранный период записей нет.</p>
+    }
+    else
+    {
+        <ol class="bar-chart" role="list" aria-label="Распределение записей по статусам">
+            @foreach (var bar in statusBars)
+            {
+                var pct = (decimal)bar.Value / maxStatus * 100m;
+                <li class="bar-chart__row">
+                    <div class="bar-chart__label">@bar.Label</div>
+                    <div class="bar-chart__track">
+                        <div class="bar-chart__fill bar-chart__fill--@bar.Css" style="width: @pct.ToString("0.0", CultureInfo.InvariantCulture)%"></div>
+                    </div>
+                    <div class="bar-chart__value">@bar.Value</div>
+                </li>
+            }
+        </ol>
+    }
+</section>
+
+<section class="card analytics-card">
+    <h2>Загрузка мастеров</h2>
+    @if (Model.Utilization.Count == 0)
+    {
+        <p class="muted">Нет данных по загрузке за период.</p>
+    }
+    else
+    {
+        <table class="table table--compact">
+            <thead>
+                <tr>
+                    <th scope="col">Мастер</th>
+                    <th scope="col">Загрузка</th>
+                    <th scope="col" class="num">Минут занято</th>
+                    <th scope="col" class="num">Минут запланировано</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var u in Model.Utilization)
+            {
+                var pct = u.UtilizationPercent;
+                var rel = (decimal)pct / maxUtil * 100m;
+                <tr>
+                    <td>@u.MasterName</td>
+                    <td>
+                        <div class="bar-chart__track bar-chart__track--inline">
+                            <div class="bar-chart__fill bar-chart__fill--util" style="width: @rel.ToString("0.0", CultureInfo.InvariantCulture)%"></div>
+                        </div>
+                        <span class="muted">@Percent(pct)</span>
+                    </td>
+                    <td class="num">@u.BookedMinutes</td>
+                    <td class="num">@u.WorkMinutes</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section class="card analytics-card">
+    <h2>Топ услуг</h2>
+    @if (Model.TopServices.Count == 0)
+    {
+        <p class="muted">За выбранный период нет данных.</p>
+    }
+    else
+    {
+        <table class="table table--compact">
+            <thead>
+                <tr>
+                    <th scope="col">Услуга</th>
+                    <th scope="col" class="num">Записей</th>
+                    <th scope="col" class="num">Выручка (Завершены)</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var t in Model.TopServices)
+            {
+                <tr>
+                    <td>@t.ServiceName</td>
+                    <td class="num">@t.Count</td>
+                    <td class="num">@Money(t.Revenue)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>

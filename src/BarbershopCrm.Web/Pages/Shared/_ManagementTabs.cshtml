@@ -29,6 +29,11 @@
                asp-page="/Masters/Manage">
                 Мастера
             </a>
+            <a class="manage-tabs__tab @(currentTab == "schedule" ? "is-active" : "")"
+               role="tab" aria-selected="@(currentTab == "schedule" ? "true" : "false")"
+               asp-page="/Admin/Schedule/Index">
+                Расписание
+            </a>
         }
     </div>
 </nav>

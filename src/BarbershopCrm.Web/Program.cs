@@ -5,6 +5,7 @@ using BarbershopCrm.Infrastructure.Security;
 using BarbershopCrm.Domain.Enums;
 using BarbershopCrm.Web.Auth;
 using BarbershopCrm.Web.Services;
+using BarbershopCrm.Infrastructure.Scheduling;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -47,6 +48,7 @@ try
     });
 
     builder.Services.AddScoped<IImageUploadService, LocalImageUploadService>();
+    builder.Services.AddScoped<ISlotService, SlotService>();
 
     var app = builder.Build();
 
@@ -66,6 +68,18 @@ try
 
     app.UseAuthorization();
     app.MapRazorPages();
+
+    app.MapGet("/api/slots", async (
+        int? branchId, int? serviceId, string? date, int? masterId,
+        ISlotService slots, CancellationToken ct) =>
+    {
+        if (branchId is null || serviceId is null || string.IsNullOrWhiteSpace(date))
+            return Results.BadRequest(new { error = "branchId, serviceId, date обязательны" });
+        if (!DateOnly.TryParse(date, out var d))
+            return Results.BadRequest(new { error = "Невалидная дата (ожидается YYYY-MM-DD)" });
+        var items = await slots.GetFreeSlotsAsync(branchId.Value, serviceId.Value, d, masterId, ct);
+        return Results.Ok(items);
+    });
 
     app.MapGet("/api/address/suggest", async (
         string? q,

@@ -45,6 +45,10 @@
                     {
                         <a asp-page="/Masters/Manage" class="nav-manage">Управление</a>
                     }
+                    else if (current is not null && current.RoleCode == RoleCode.Master)
+                    {
+                        <a asp-page="/MasterArea/Schedule" class="nav-manage">Моё расписание</a>
+                    }
 
                     @if (current is null)
                     {

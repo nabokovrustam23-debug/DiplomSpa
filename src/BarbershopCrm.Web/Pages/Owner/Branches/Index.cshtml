@@ -64,57 +64,6 @@
     }
 </section>
 
-<section class="card" aria-labelledby="branches-add-heading">
-    <h2 id="branches-add-heading">Добавить филиал</h2>
-    <p class="muted">Начните вводить адрес — подсказки подтянут точные координаты для карты.</p>
-
-    <form method="post" class="form-grid" enctype="multipart/form-data" data-busy>
-        <div asp-validation-summary="ModelOnly" class="alert alert--error"></div>
-
-        <div class="form-group">
-            <label asp-for="Input.Name">Название</label>
-            <input asp-for="Input.Name" required class="input" placeholder="Тихий час — …" autofocus />
-            <span asp-validation-for="Input.Name" class="field-error"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="Input.Address">Адрес <span class="faint">— начните вводить, появятся подсказки</span></label>
-            <input asp-for="Input.Address" required class="input"
-                   placeholder="Краснодар, ул. Красная, 32"
-                   data-address-suggest
-                   data-lat-target="#Input_Latitude"
-                   data-lon-target="#Input_Longitude" />
-            <span asp-validation-for="Input.Address" class="field-error"></span>
-            <input asp-for="Input.Latitude" type="hidden" id="Input_Latitude" />
-            <input asp-for="Input.Longitude" type="hidden" id="Input_Longitude" />
-        </div>
-        <div class="form-group">
-            <label asp-for="Input.Phone">Телефон</label>
-            <input asp-for="Input.Phone" type="tel" class="input" placeholder="+7 (861) 200-10-10" />
-            <span asp-validation-for="Input.Phone" class="field-error"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="Input.ImageFile">Фото филиала <span class="faint">— jpg/png/webp до 4&nbsp;МБ</span></label>
-            <input asp-for="Input.ImageFile" type="file" accept="image/jpeg,image/png,image/webp" class="input" />
-            <span asp-validation-for="Input.ImageFile" class="field-error"></span>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label asp-for="Input.OpeningTime">Открытие</label>
-                <input asp-for="Input.OpeningTime" type="time" required class="input" />
-                <span asp-validation-for="Input.OpeningTime" class="field-error"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.ClosingTime">Закрытие</label>
-                <input asp-for="Input.ClosingTime" type="time" required class="input" />
-                <span asp-validation-for="Input.ClosingTime" class="field-error"></span>
-            </div>
-        </div>
-        <div class="form-actions">
-            <button type="submit" class="btn btn--primary">Создать филиал</button>
-        </div>
-    </form>
-</section>
-
 @section Scripts {
     <script src="~/js/address-suggest.js" asp-append-version="true"></script>
     <script src="~/js/form-busy.js" asp-append-version="true"></script>

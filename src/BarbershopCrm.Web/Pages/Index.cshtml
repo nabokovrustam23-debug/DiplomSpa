@@ -15,7 +15,10 @@
     {
         <a class="btn btn--soft" asp-page="/Lead/Index">Оставить заявку</a>
     }
-    <a class="btn btn--outline" asp-page="/Account/Login" style="margin-left: var(--space-3)">Войти в кабинет</a>
+    @if (User.Identity?.IsAuthenticated != true)
+    {
+        <a class="btn btn--outline" asp-page="/Account/Login" style="margin-left: var(--space-3)">Войти в кабинет</a>
+    }
 </section>
 
 <div class="divider"></div>
@@ -70,17 +73,3 @@
     }
 </div>
 
-<div class="divider"></div>
-
-<section class="card">
-    <h3>Состояние модулей</h3>
-    <p class="muted">Реализуется по плану из <code>docs/analysis.md</code>. Бизнес-логика добавляется по одному модулю на PR.</p>
-    <p>
-        <span class="badge success">M1 · Auth ✓</span>
-        <span class="badge success">M2 · Каталог ✓</span>
-        <span class="badge">M3 · Расписание</span>
-        <span class="badge">M4 · Записи</span>
-        <span class="badge">M5 · Аналитика</span>
-        <span class="badge">M6 · Уведомления</span>
-    </p>
-</section>

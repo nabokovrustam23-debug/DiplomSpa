@@ -1,0 +1,50 @@
+@page "/Account/Notifications"
+@model BarbershopCrm.Web.Pages.Account.Notifications.IndexModel
+@{
+    ViewData["Title"] = "Мои уведомления";
+}
+
+<section class="card">
+    <h1>Мои уведомления</h1>
+    <p class="muted">
+        Здесь собраны in-app уведомления: подтверждения и отмены записей, напоминания, сервисные сообщения.
+        @if (Model.UnreadCount > 0)
+        {
+            <strong>Непрочитанных: @Model.UnreadCount</strong>
+        }
+    </p>
+
+    @if (Model.UnreadCount > 0)
+    {
+        <form method="post" asp-page-handler="ReadAll" class="form-actions">
+            <button type="submit" class="btn btn--outline">Отметить все прочитанными</button>
+        </form>
+    }
+
+    @if (!Model.Items.Any())
+    {
+        <p class="muted">Уведомлений пока нет.</p>
+    }
+    else
+    {
+        <ul class="notif-list">
+            @foreach (var n in Model.Items)
+            {
+                var unread = n.ReadAt is null;
+                <li class="notif @(unread ? "notif--unread" : "")">
+                    <div class="notif__head">
+                        <span class="notif__subject">@n.Subject</span>
+                        <span class="notif__date muted">@n.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                    </div>
+                    <pre class="notif__body">@n.Body</pre>
+                    @if (unread)
+                    {
+                        <form method="post" asp-page-handler="Read" asp-route-id="@n.NotificationId" class="form-actions">
+                            <button type="submit" class="btn btn--ghost">Прочитано</button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</section>

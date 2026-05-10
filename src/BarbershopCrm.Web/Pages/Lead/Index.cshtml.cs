@@ -2,6 +2,7 @@ using BarbershopCrm.Domain.Entities;
 using BarbershopCrm.Domain.Enums;
 using BarbershopCrm.Infrastructure.Auth;
 using BarbershopCrm.Infrastructure.Data;
+using BarbershopCrm.Infrastructure.Notifications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -15,10 +16,12 @@ public class IndexModel : AppPageModel
 {
     private static readonly Regex PhoneRegex = new(@"^\+?[78][\s\-\(\)]*(\d[\s\-\(\)]*){10}$", RegexOptions.Compiled);
     private readonly AppDbContext _db;
+    private readonly INotificationService _notifications;
 
-    public IndexModel(ICurrentUserAccessor cu, AppDbContext db) : base(cu)
+    public IndexModel(ICurrentUserAccessor cu, AppDbContext db, INotificationService notifications) : base(cu)
     {
         _db = db;
+        _notifications = notifications;
     }
 
     [BindProperty] public InputModel Input { get; set; } = new();
@@ -85,6 +88,8 @@ public class IndexModel : AppPageModel
             });
         }
         await _db.SaveChangesAsync(ct);
+
+        await _notifications.OnLeadCreatedAsync(lead.LeadId, ct);
 
         TempData["Success"] = "Заявка принята. Мы свяжемся с вами в ближайшее время.";
         return RedirectToPage("/Lead/Thanks");

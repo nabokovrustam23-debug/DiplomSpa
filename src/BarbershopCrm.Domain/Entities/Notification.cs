@@ -11,6 +11,7 @@ public class Notification
     public string Status { get; set; } = Domain.Enums.NotificationStatus.Pending;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? SentAt { get; set; }
+    public DateTime? ReadAt { get; set; }
     public string? Error { get; set; }
 
     public Persona Recipient { get; set; } = null!;

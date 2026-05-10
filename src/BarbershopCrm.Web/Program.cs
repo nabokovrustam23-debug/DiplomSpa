@@ -54,6 +54,8 @@ try
     builder.Services.Configure<BookingOptions>(builder.Configuration.GetSection("Booking"));
     builder.Services.AddScoped<IBookingService, BookingService>();
 
+    builder.Services.AddNotificationBackground();
+
     var app = builder.Build();
 
     app.UseSerilogRequestLogging();

@@ -65,6 +65,9 @@
                     }
                     else
                     {
+                        <a asp-page="/Account/Notifications/Index" class="nav-bell" title="Мои уведомления">
+                            Уведомления
+                        </a>
                         <a asp-page="/Profile/Index" class="user-pill" title="@current.RoleCode">
                             @current.FullName
                         </a>

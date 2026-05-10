@@ -1,0 +1,74 @@
+@page "/Master/Schedule"
+@model BarbershopCrm.Web.Pages.MasterArea.ScheduleModel
+@{
+    ViewData["Title"] = "Моё расписание";
+    var prevWeek = Model.StartDate.AddDays(-7);
+    var nextWeek = Model.StartDate.AddDays(7);
+    var todayWeek = DateOnly.FromDateTime(DateTime.Today);
+    var dow = (int)todayWeek.DayOfWeek;
+    var thisWeekStart = todayWeek.AddDays(-((dow == 0 ? 7 : dow) - 1));
+}
+
+<section class="card">
+    <h1>Моё расписание</h1>
+    @if (Model.Self is null)
+    {
+        <p class="muted">Профиль мастера не настроен. Обратитесь к администратору.</p>
+    }
+    else
+    {
+        <p class="muted">@Model.Self.Persona.FullName · @Model.Self.Branch?.Name</p>
+
+        <nav class="schedule-toolbar__nav" aria-label="Навигация по неделям">
+            <a class="btn btn--outline btn--sm" asp-page="/MasterArea/Schedule" asp-route-weekStart="@prevWeek.ToString("yyyy-MM-dd")">← Прошлая неделя</a>
+            <a class="btn btn--outline btn--sm" asp-page="/MasterArea/Schedule" asp-route-weekStart="@thisWeekStart.ToString("yyyy-MM-dd")">Эта неделя</a>
+            <a class="btn btn--outline btn--sm" asp-page="/MasterArea/Schedule" asp-route-weekStart="@nextWeek.ToString("yyyy-MM-dd")">Следующая неделя →</a>
+        </nav>
+
+        <p class="muted">Неделя <strong>@Model.StartDate.ToString("dd.MM")–@Model.StartDate.AddDays(6).ToString("dd.MM.yyyy")</strong>.</p>
+
+        <ul class="master-week">
+            @foreach (var d in Model.WeekDays)
+            {
+                Model.ByDay.TryGetValue(d, out var ranges);
+                Model.BookingsByDay.TryGetValue(d, out var bks);
+                <li class="master-week__day">
+                    <h3>@d.ToString("dddd, dd.MM", System.Globalization.CultureInfo.GetCultureInfo("ru-RU"))</h3>
+                    <div class="master-week__intervals">
+                        @if (ranges is null || ranges.Count == 0)
+                        {
+                            <span class="faint">Интервалы не назначены</span>
+                        }
+                        else
+                        {
+                            foreach (var s in ranges)
+                            {
+                                <span class="schedule-grid__range schedule-grid__range--@s.ScheduleType.ToLowerInvariant()">@BarbershopCrm.Web.Pages.Admin.Schedule.IndexModel.Label(s.ScheduleType) @s.StartTime.ToString("HH\\:mm")–@s.EndTime.ToString("HH\\:mm")</span>
+                            }
+                        }
+                    </div>
+                    @if (bks is { Count: > 0 })
+                    {
+                        <details class="master-week__bookings">
+                            <summary>Записи: @bks.Count</summary>
+                            <ul>
+                                @foreach (var b in bks)
+                                {
+                                    <li>
+                                        <strong>@b.StartDateTime.ToString("HH:mm")</strong> · @b.Service.Name
+                                        · <span class="faint">@b.Client.Persona.FullName</span>
+                                        · <em>@b.Status</em>
+                                    </li>
+                                }
+                            </ul>
+                        </details>
+                    }
+                </li>
+            }
+        </ul>
+
+        <div class="form-actions">
+            <a asp-page="/MasterArea/RequestLeave" class="btn btn--outline">Запросить отпуск/больничный</a>
+        </div>
+    }
+</section>

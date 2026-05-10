@@ -24,7 +24,8 @@ public static class SeedDevData
     {
         if (await db.Users.AnyAsync(ct))
         {
-            logger.LogInformation("SeedDevData: users already present, skipping");
+            logger.LogInformation("SeedDevData: users already present, skipping user seed");
+            await SeedSchedulesAsync(db, logger, ct);
             return;
         }
 
@@ -83,6 +84,79 @@ public static class SeedDevData
 
         await db.SaveChangesAsync(ct);
         logger.LogInformation("SeedDevData: seeded {Count} test users", await db.Users.CountAsync(ct));
+
+        await SeedSchedulesAsync(db, logger, ct);
+    }
+
+    private static async Task SeedSchedulesAsync(AppDbContext db, ILogger logger, CancellationToken ct)
+    {
+        if (await db.WorkSchedules.AnyAsync(ct))
+        {
+            logger.LogInformation("SeedDevData: schedules already present, skipping");
+            return;
+        }
+
+        var masters = await db.Masters
+            .Where(m => m.IsActive)
+            .Select(m => new { m.MasterId, m.BranchId })
+            .ToListAsync(ct);
+        if (masters.Count == 0) return;
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+        // Seed 14 days starting 7 days ago so the demo also covers history.
+        var start = today.AddDays(-7);
+        var end = today.AddDays(14);
+
+        // Standard shift 10:00..20:00 with lunch 14:00..15:00, days off Sundays.
+        var shiftStart = new TimeOnly(10, 0);
+        var shiftEnd = new TimeOnly(20, 0);
+        var lunchStart = new TimeOnly(14, 0);
+        var lunchEnd = new TimeOnly(15, 0);
+
+        int added = 0;
+        foreach (var m in masters)
+        {
+            for (var d = start; d <= end; d = d.AddDays(1))
+            {
+                if (d.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    db.WorkSchedules.Add(new WorkSchedule
+                    {
+                        MasterId = m.MasterId,
+                        BranchId = m.BranchId,
+                        WorkDate = d,
+                        StartTime = new TimeOnly(0, 0),
+                        EndTime = new TimeOnly(23, 59),
+                        ScheduleType = ScheduleType.DayOff,
+                    });
+                    added++;
+                    continue;
+                }
+
+                db.WorkSchedules.Add(new WorkSchedule
+                {
+                    MasterId = m.MasterId,
+                    BranchId = m.BranchId,
+                    WorkDate = d,
+                    StartTime = shiftStart,
+                    EndTime = shiftEnd,
+                    ScheduleType = ScheduleType.Work,
+                });
+                db.WorkSchedules.Add(new WorkSchedule
+                {
+                    MasterId = m.MasterId,
+                    BranchId = m.BranchId,
+                    WorkDate = d,
+                    StartTime = lunchStart,
+                    EndTime = lunchEnd,
+                    ScheduleType = ScheduleType.Lunch,
+                });
+                added += 2;
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("SeedDevData: seeded {Count} WorkSchedule rows", added);
     }
 
     private static User Add(

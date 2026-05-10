@@ -1,0 +1,156 @@
+@page
+@model BarbershopCrm.Web.Pages.Admin.Schedule.EditModel
+@{
+    ViewData["Title"] = $"Расписание · {Model.Master?.Persona.FullName}";
+    ViewData["ManagementTab"] = "schedule";
+}
+
+<partial name="_ManagementTabs" />
+
+<section class="card">
+    <nav class="breadcrumbs faint" aria-label="Хлебные крошки">
+        <a asp-page="Index" asp-route-branchId="@Model.Master?.BranchId">Расписание</a> ›
+        <span>@Model.Master?.Persona.FullName · @Model.TargetDate.ToString("dd.MM.yyyy")</span>
+    </nav>
+    <h2 class="manage-tabs__heading">@Model.Master?.Persona.FullName</h2>
+    <p class="muted">@Model.Master?.Branch?.Name · @Model.TargetDate.ToString("dddd, dd MMMM yyyy", System.Globalization.CultureInfo.GetCultureInfo("ru-RU"))</p>
+
+    <h3>Существующие интервалы</h3>
+    @if (Model.Existing.Count == 0)
+    {
+        <p class="muted">На этот день пока нет интервалов.</p>
+    }
+    else
+    {
+        <table class="table table--compact">
+            <thead>
+                <tr>
+                    <th scope="col">Тип</th>
+                    <th scope="col">Начало</th>
+                    <th scope="col">Окончание</th>
+                    <th scope="col"><span class="visually-hidden">Удалить</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Existing)
+                {
+                    <tr>
+                        <td><span class="schedule-grid__range schedule-grid__range--@s.ScheduleType.ToLowerInvariant()">@BarbershopCrm.Web.Pages.Admin.Schedule.IndexModel.Label(s.ScheduleType)</span></td>
+                        <td class="tnum">@s.StartTime.ToString("HH\\:mm")</td>
+                        <td class="tnum">@s.EndTime.ToString("HH\\:mm")</td>
+                        <td>
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@s.WorkScheduleId"
+                                  asp-route-masterId="@Model.MasterId" asp-route-date="@Model.Date" data-busy>
+                                <button type="submit" class="btn btn--sm btn--danger"
+                                        onclick="return confirm('Удалить интервал @BarbershopCrm.Web.Pages.Admin.Schedule.IndexModel.Label(s.ScheduleType) @s.StartTime.ToString("HH\\:mm")–@s.EndTime.ToString("HH\\:mm")?');">
+                                    Удалить
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section class="card" aria-labelledby="add-heading">
+    <h3 id="add-heading">Добавить интервал на @Model.TargetDate.ToString("dd.MM")</h3>
+
+    <form method="post" asp-page-handler="Add" asp-route-masterId="@Model.MasterId" asp-route-date="@Model.Date" class="form-grid" data-busy>
+        <div asp-validation-summary="All" class="alert alert--error"></div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label asp-for="Add.ScheduleType">Тип</label>
+                <select asp-for="Add.ScheduleType" class="input">
+                    <option value="Work">Смена</option>
+                    <option value="Lunch">Обед</option>
+                    <option value="DayOff">Выходной</option>
+                    <option value="Vacation">Отпуск</option>
+                    <option value="SickLeave">Больничный</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label asp-for="Add.StartTime">Начало</label>
+                <input asp-for="Add.StartTime" type="time" class="input" required />
+            </div>
+            <div class="form-group">
+                <label asp-for="Add.EndTime">Окончание</label>
+                <input asp-for="Add.EndTime" type="time" class="input" required />
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Добавить</button>
+            <a asp-page="Index" asp-route-branchId="@Model.Master?.BranchId" class="btn btn--outline">Назад к сетке</a>
+        </div>
+    </form>
+</section>
+
+<section class="card" aria-labelledby="bulk-heading">
+    <h3 id="bulk-heading">Массовое заполнение смен</h3>
+    <p class="muted">Применяется к мастеру <strong>@Model.Master?.Persona.FullName</strong>. Создаёт стандартную смену (опционально с обедом) на каждый выбранный день в диапазоне.</p>
+
+    <form method="post" asp-page-handler="Bulk" asp-route-masterId="@Model.MasterId" asp-route-date="@Model.Date" class="form-grid" data-busy>
+        <div class="form-row">
+            <div class="form-group">
+                <label asp-for="Bulk.From">С даты</label>
+                <input asp-for="Bulk.From" type="date" class="input" required />
+            </div>
+            <div class="form-group">
+                <label asp-for="Bulk.To">По дату</label>
+                <input asp-for="Bulk.To" type="date" class="input" required />
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label asp-for="Bulk.StartTime">Начало смены</label>
+                <input asp-for="Bulk.StartTime" type="time" class="input" required />
+            </div>
+            <div class="form-group">
+                <label asp-for="Bulk.EndTime">Окончание смены</label>
+                <input asp-for="Bulk.EndTime" type="time" class="input" required />
+            </div>
+            <div class="form-group">
+                <label asp-for="Bulk.LunchStart">Обед с <span class="faint">(опц.)</span></label>
+                <input asp-for="Bulk.LunchStart" type="time" class="input" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Bulk.LunchEnd">Обед по</label>
+                <input asp-for="Bulk.LunchEnd" type="time" class="input" />
+            </div>
+        </div>
+
+        <fieldset class="form-group">
+            <legend>Дни недели <span class="faint">(если не выбрать — все)</span></legend>
+            <div class="checkbox-grid">
+                @{
+                    var days = new[] { ("Пн", 1), ("Вт", 2), ("Ср", 3), ("Чт", 4), ("Пт", 5), ("Сб", 6), ("Вс", 7) };
+                }
+                @foreach (var (lbl, num) in days)
+                {
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="Bulk.Weekdays" value="@num" /> @lbl
+                    </label>
+                }
+            </div>
+        </fieldset>
+
+        <div class="form-group">
+            <label class="checkbox-item">
+                <input asp-for="Bulk.Overwrite" type="checkbox" />
+                Перезаписать существующие интервалы в эти дни
+            </label>
+            <span class="faint">Без галочки дни, у которых уже есть интервалы, пропускаются.</span>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Применить шаблон</button>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,46 @@
+@page "/Master/RequestLeave"
+@model BarbershopCrm.Web.Pages.MasterArea.RequestLeaveModel
+@{
+    ViewData["Title"] = "Запрос отпуска / больничного";
+    var today = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd");
+}
+
+<section class="card">
+    <nav class="breadcrumbs faint" aria-label="Хлебные крошки">
+        <a asp-page="/MasterArea/Schedule">Моё расписание</a> ›
+        <span>Запрос отпуска</span>
+    </nav>
+    <h1>Заявка на отпуск или больничный</h1>
+    <p class="muted">На выбранные дни существующие смены/обеды будут заменены на отметку «отпуск» или «больничный». Администратор увидит изменение в сетке расписания и при необходимости скорректирует.</p>
+
+    <form method="post" class="form-grid" data-busy>
+        <div asp-validation-summary="All" class="alert alert--error"></div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label asp-for="Input.LeaveType">Тип</label>
+                <select asp-for="Input.LeaveType" class="input">
+                    <option value="Vacation">Отпуск</option>
+                    <option value="SickLeave">Больничный</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.From">С даты</label>
+                <input asp-for="Input.From" type="date" class="input" min="@today" required />
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.To">По дату</label>
+                <input asp-for="Input.To" type="date" class="input" min="@today" required />
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Отправить</button>
+            <a asp-page="/MasterArea/Schedule" class="btn btn--outline">Отмена</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,117 @@
+@page
+@model BarbershopCrm.Web.Pages.Admin.Schedule.IndexModel
+@{
+    ViewData["Title"] = "Расписание мастеров";
+    ViewData["ManagementTab"] = "schedule";
+    var isOwner = Model.Current?.RoleCode == RoleCode.Owner;
+    var prevWeek = Model.StartDate.AddDays(-7);
+    var nextWeek = Model.StartDate.AddDays(7);
+    var todayWeek = Model.StartDate;
+    DateOnly thisWeekToday;
+    {
+        var dow = (int)DateOnly.FromDateTime(DateTime.Today).DayOfWeek;
+        var diff = (dow == 0 ? 7 : dow) - 1;
+        thisWeekToday = DateOnly.FromDateTime(DateTime.Today).AddDays(-diff);
+    }
+}
+
+<partial name="_ManagementTabs" />
+
+<section class="card">
+    <div class="schedule-toolbar">
+        @if (isOwner && Model.Branches.Count > 1)
+        {
+            <form method="get" class="schedule-toolbar__filter">
+                <label for="schedule-branch" class="visually-hidden">Филиал</label>
+                <select id="schedule-branch" name="branchId" class="input" onchange="this.form.submit()">
+                    @foreach (var b in Model.Branches)
+                    {
+                        <option value="@b.BranchId" selected="@(b.BranchId == Model.BranchId)">@b.Name</option>
+                    }
+                </select>
+                <input type="hidden" name="weekStart" value="@Model.StartDate:yyyy-MM-dd" />
+                <noscript><button type="submit" class="btn btn--outline btn--sm">Применить</button></noscript>
+            </form>
+        }
+        else if (Model.Masters.Count > 0)
+        {
+            <span class="faint">Филиал: <strong>@Model.Masters[0].Branch?.Name @(Model.Branches.FirstOrDefault(b => b.BranchId == Model.BranchId)?.Name)</strong></span>
+        }
+
+        <nav class="schedule-toolbar__nav" aria-label="Навигация по неделям">
+            <a class="btn btn--outline btn--sm" asp-page="Index" asp-route-weekStart="@prevWeek.ToString("yyyy-MM-dd")" asp-route-branchId="@Model.BranchId">← Прошлая неделя</a>
+            <a class="btn btn--outline btn--sm" asp-page="Index" asp-route-weekStart="@thisWeekToday.ToString("yyyy-MM-dd")" asp-route-branchId="@Model.BranchId">Эта неделя</a>
+            <a class="btn btn--outline btn--sm" asp-page="Index" asp-route-weekStart="@nextWeek.ToString("yyyy-MM-dd")" asp-route-branchId="@Model.BranchId">Следующая неделя →</a>
+        </nav>
+    </div>
+
+    <p class="muted">Неделя <strong>@Model.StartDate.ToString("dd.MM")–@Model.StartDate.AddDays(6).ToString("dd.MM.yyyy")</strong>. Кликните на ячейку, чтобы добавить или изменить интервалы.</p>
+
+    @if (Model.Masters.Count == 0)
+    {
+        <p class="muted">В этом филиале нет активных мастеров. Добавьте мастера в разделе «Мастера».</p>
+    }
+    else
+    {
+        <div class="schedule-grid-wrap" role="region" aria-label="Сетка расписания">
+            <table class="schedule-grid">
+                <thead>
+                    <tr>
+                        <th scope="col">Мастер</th>
+                        @foreach (var d in Model.WeekDays)
+                        {
+                            <th scope="col">
+                                <div class="schedule-grid__date">@d.ToString("ddd", System.Globalization.CultureInfo.GetCultureInfo("ru-RU"))</div>
+                                <div class="schedule-grid__date faint">@d.ToString("dd.MM")</div>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var m in Model.Masters)
+                    {
+                        <tr>
+                            <th scope="row" class="schedule-grid__name">@m.Persona.FullName</th>
+                            @foreach (var d in Model.WeekDays)
+                            {
+                                var key = (m.MasterId, d);
+                                Model.Grid.TryGetValue(key, out var ranges);
+                                var hasAny = ranges is { Count: > 0 };
+                                <td class="schedule-grid__cell @(hasAny ? "is-filled" : "")">
+                                    <a class="schedule-grid__cell-link"
+                                       asp-page="Edit"
+                                       asp-route-masterId="@m.MasterId"
+                                       asp-route-date="@d.ToString("yyyy-MM-dd")"
+                                       aria-label="@m.Persona.FullName, @d.ToString("dd.MM")">
+                                        @if (hasAny)
+                                        {
+                                            foreach (var s in ranges!)
+                                            {
+                                                <span class="schedule-grid__range schedule-grid__range--@s.ScheduleType.ToLowerInvariant()">@s.StartTime.ToString("HH\\:mm")–@s.EndTime.ToString("HH\\:mm")</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="faint">+ добавить</span>
+                                        }
+                                    </a>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<section class="card" aria-labelledby="legend-heading">
+    <h2 id="legend-heading">Обозначения</h2>
+    <ul class="schedule-legend">
+        <li><span class="schedule-grid__range schedule-grid__range--work">Смена</span> — рабочее время</li>
+        <li><span class="schedule-grid__range schedule-grid__range--lunch">Обед</span> — перерыв внутри смены</li>
+        <li><span class="schedule-grid__range schedule-grid__range--dayoff">Выходной</span></li>
+        <li><span class="schedule-grid__range schedule-grid__range--vacation">Отпуск</span></li>
+        <li><span class="schedule-grid__range schedule-grid__range--sickleave">Больничный</span></li>
+    </ul>
+</section>

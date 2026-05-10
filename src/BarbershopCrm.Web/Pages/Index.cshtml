@@ -15,7 +15,7 @@
     {
         <a class="btn btn--soft" asp-page="/Lead/Index">Оставить заявку</a>
     }
-    @if (!Model.IsAuthenticated)
+    @if (User.Identity?.IsAuthenticated != true)
     {
         <a class="btn btn--outline" asp-page="/Account/Login" style="margin-left: var(--space-3)">Войти в кабинет</a>
     }

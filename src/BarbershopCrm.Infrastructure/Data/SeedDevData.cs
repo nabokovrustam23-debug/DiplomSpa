@@ -86,6 +86,102 @@ public static class SeedDevData
         logger.LogInformation("SeedDevData: seeded {Count} test users", await db.Users.CountAsync(ct));
 
         await SeedSchedulesAsync(db, logger, ct);
+        await SeedBookingsAsync(db, logger, ct);
+        await SeedLeadsAsync(db, logger, ct);
+    }
+
+    private static async Task SeedBookingsAsync(AppDbContext db, ILogger logger, CancellationToken ct)
+    {
+        if (await db.Bookings.AnyAsync(ct))
+        {
+            logger.LogInformation("SeedDevData: bookings already present, skipping");
+            return;
+        }
+
+        var clients = await db.Clients
+            .Include(c => c.Persona)
+            .Where(c => c.Persona.User != null && c.Persona.User.RoleId != 0)
+            .ToListAsync(ct);
+        if (clients.Count == 0) return;
+        var firstClient = clients[0];
+
+        var masters = await db.Masters.Include(m => m.Persona).Where(m => m.IsActive)
+            .ToListAsync(ct);
+        if (masters.Count == 0) return;
+
+        var services = await db.Services.Where(s => s.IsActive).ToListAsync(ct);
+        if (services.Count == 0) return;
+
+        var today = DateTime.Today;
+        var futureDay = today.AddDays(1);
+        // Skip Sunday (master is off).
+        while (futureDay.DayOfWeek == DayOfWeek.Sunday) futureDay = futureDay.AddDays(1);
+        var pastDay = today.AddDays(-3);
+        while (pastDay.DayOfWeek == DayOfWeek.Sunday) pastDay = pastDay.AddDays(-1);
+
+        var pickService = services.First();
+        var pickMaster = masters.FirstOrDefault(m => db.MasterServices.Any(ms => ms.MasterId == m.MasterId && ms.ServiceId == pickService.ServiceId)) ?? masters[0];
+
+        // Future booking — Created
+        db.Bookings.Add(new Booking
+        {
+            ClientId = firstClient.ClientId,
+            MasterId = pickMaster.MasterId,
+            ServiceId = pickService.ServiceId,
+            BranchId = pickMaster.BranchId,
+            StartDateTime = futureDay.AddHours(11),
+            DurationMinutes = pickService.DurationMinutes,
+            PriceSnapshot = pickService.Price,
+            Status = BookingStatus.Created,
+            Source = BookingSource.Online,
+        });
+
+        // Past completed booking + Visit
+        var completed = new Booking
+        {
+            ClientId = firstClient.ClientId,
+            MasterId = pickMaster.MasterId,
+            ServiceId = pickService.ServiceId,
+            BranchId = pickMaster.BranchId,
+            StartDateTime = pastDay.AddHours(12),
+            DurationMinutes = pickService.DurationMinutes,
+            PriceSnapshot = pickService.Price,
+            Status = BookingStatus.Completed,
+            Source = BookingSource.Online,
+        };
+        db.Bookings.Add(completed);
+        await db.SaveChangesAsync(ct);
+        db.Visits.Add(new Visit
+        {
+            BookingId = completed.BookingId,
+            TotalAmount = pickService.Price,
+            MasterNotes = "Тестовый визит из сидинга.",
+            CompletedAt = pastDay.AddHours(12).AddMinutes(pickService.DurationMinutes),
+        });
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("SeedDevData: seeded sample bookings");
+    }
+
+    private static async Task SeedLeadsAsync(AppDbContext db, ILogger logger, CancellationToken ct)
+    {
+        if (await db.Leads.AnyAsync(ct))
+        {
+            logger.LogInformation("SeedDevData: leads already present, skipping");
+            return;
+        }
+
+        var firstBranch = await db.Branches.OrderBy(b => b.BranchId).Select(b => (int?)b.BranchId).FirstOrDefaultAsync(ct);
+        db.Leads.Add(new Domain.Entities.Lead
+        {
+            RawName = "Гость Тест",
+            RawPhone = "+79180000099",
+            PreferredBranchId = firstBranch,
+            Comment = "Хочу записаться, перезвоните пожалуйста.",
+            Status = LeadStatus.New,
+            CreatedAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("SeedDevData: seeded sample leads");
     }
 
     private static async Task SeedSchedulesAsync(AppDbContext db, ILogger logger, CancellationToken ct)

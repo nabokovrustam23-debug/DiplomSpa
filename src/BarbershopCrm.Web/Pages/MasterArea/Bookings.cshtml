@@ -1,0 +1,82 @@
+@page "/Master/Bookings"
+@using BarbershopCrm.Domain.Enums
+@model BarbershopCrm.Web.Pages.MasterArea.BookingsModel
+@{
+    ViewData["Title"] = "Мои записи на день";
+}
+
+<section class="card">
+    <h1>Мои записи</h1>
+    <p class="muted">Подтверждайте, завершайте или отмечайте «не пришёл». При завершении создаётся визит с суммой и заметками.</p>
+
+    <div asp-validation-summary="All" class="alert alert--error"></div>
+
+    <form method="get" class="form-row">
+        <div class="form-group">
+            <label for="Date">День</label>
+            <input type="date" id="Date" name="Date" class="input" value="@Model.DateValue.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+        </div>
+        <div class="form-group">
+            <a class="btn btn--outline" asp-page="/MasterArea/Schedule">Расписание</a>
+        </div>
+    </form>
+
+    @if (!Model.Bookings.Any())
+    {
+        <p class="muted">На @Model.DateValue.ToString("dd.MM.yyyy") записей нет.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th scope="col">Время</th><th scope="col">Клиент</th><th scope="col">Услуга</th><th scope="col">Статус</th><th scope="col">Действия</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var b in Model.Bookings)
+            {
+                <tr>
+                    <td>@b.StartDateTime.ToString("HH:mm") – @b.StartDateTime.AddMinutes(b.DurationMinutes).ToString("HH:mm")</td>
+                    <td>@b.Client.Persona.LastName @b.Client.Persona.FirstName<br/><span class="muted">@b.Client.Persona.Phone</span></td>
+                    <td>@b.Service.Name (@b.PriceSnapshot.ToString("0") ₽)</td>
+                    <td><span class="badge badge--@b.Status.ToLowerInvariant()">@b.Status</span></td>
+                    <td class="booking-actions">
+                        @if (b.Status == BookingStatus.Created)
+                        {
+                            <form method="post" asp-page-handler="Confirm" asp-route-id="@b.BookingId" data-busy>
+                                <button class="btn btn--primary btn--small" type="submit">Подтвердить</button>
+                            </form>
+                        }
+                        @if (b.Status == BookingStatus.Created || b.Status == BookingStatus.Confirmed)
+                        {
+                            <form method="post" asp-page-handler="NoShow" asp-route-id="@b.BookingId" data-busy onsubmit="return confirm('Отметить, что клиент не пришёл?')">
+                                <button class="btn btn--outline btn--small" type="submit">Не пришёл</button>
+                            </form>
+                            <details class="booking-actions__complete">
+                                <summary class="btn btn--small">Завершить</summary>
+                                <form method="post" asp-page-handler="Complete" data-busy class="form-grid">
+                                    <input type="hidden" name="Complete.BookingId" value="@b.BookingId" />
+                                    <div class="form-group">
+                                        <label for="totalAmount-@b.BookingId">Сумма ₽</label>
+                                        <input id="totalAmount-@b.BookingId" name="Complete.TotalAmount" type="number" min="0" step="50" required class="input" value="@b.PriceSnapshot.ToString("0")" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="masterNotes-@b.BookingId">Заметки</label>
+                                        <textarea id="masterNotes-@b.BookingId" name="Complete.MasterNotes" maxlength="500" class="input"></textarea>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button class="btn btn--primary btn--small" type="submit">Сохранить визит</button>
+                                    </div>
+                                </form>
+                            </details>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>
+
+@section Scripts {
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+}

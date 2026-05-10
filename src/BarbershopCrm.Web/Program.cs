@@ -5,6 +5,7 @@ using BarbershopCrm.Infrastructure.Security;
 using BarbershopCrm.Domain.Enums;
 using BarbershopCrm.Web.Auth;
 using BarbershopCrm.Web.Services;
+using BarbershopCrm.Infrastructure.Bookings;
 using BarbershopCrm.Infrastructure.Scheduling;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -49,6 +50,9 @@ try
 
     builder.Services.AddScoped<IImageUploadService, LocalImageUploadService>();
     builder.Services.AddScoped<ISlotService, SlotService>();
+
+    builder.Services.Configure<BookingOptions>(builder.Configuration.GetSection("Booking"));
+    builder.Services.AddScoped<IBookingService, BookingService>();
 
     var app = builder.Build();
 

@@ -7,7 +7,14 @@
 <section class="hero">
     <h1>Тихий час</h1>
     <p>Сеть барбершопов в Краснодаре. CRM-система управляет филиалами, расписанием мастеров, онлайн-записью клиентов и аналитикой по сети.</p>
-    <a class="btn btn--soft" href="#">Записаться онлайн</a>
+    @if (Model.IsAuthenticated && Model.Current?.RoleCode == RoleCode.Client)
+    {
+        <a class="btn btn--soft" asp-page="/BookingFlow/New">Записаться онлайн</a>
+    }
+    else
+    {
+        <a class="btn btn--soft" asp-page="/Lead/Index">Оставить заявку</a>
+    }
     <a class="btn btn--outline" asp-page="/Account/Login" style="margin-left: var(--space-3)">Войти в кабинет</a>
 </section>
 

@@ -1,0 +1,93 @@
+@page "/Admin/Bookings"
+@using BarbershopCrm.Domain.Enums
+@model BarbershopCrm.Web.Pages.Admin.Bookings.IndexModel
+@{
+    ViewData["Title"] = "Записи";
+    ViewData["ManagementTab"] = "bookings";
+}
+
+<partial name="_ManagementTabs" />
+
+<section class="card">
+    <div class="card__header">
+        <h1>Журнал записей</h1>
+        <a asp-page="/Admin/Bookings/New" class="btn btn--primary">Создать запись вручную</a>
+    </div>
+
+    <form method="get" class="form-row">
+        @if (Model.BranchOptions.Count > 1)
+        {
+            <div class="form-group">
+                <label for="BranchId">Филиал</label>
+                <select id="BranchId" name="BranchId" class="input" onchange="this.form.submit()">
+                    <option value="">Все</option>
+                    @foreach (var b in Model.BranchOptions)
+                    {
+                        <option value="@b.Value" selected="@(Model.BranchId?.ToString() == b.Value)">@b.Text</option>
+                    }
+                </select>
+            </div>
+        }
+        <div class="form-group">
+            <label for="From">С</label>
+            <input id="From" name="From" type="date" class="input" value="@Model.FromValue.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="form-group">
+            <label for="To">По</label>
+            <input id="To" name="To" type="date" class="input" value="@Model.ToValue.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="form-group">
+            <label for="Status">Статус</label>
+            <select id="Status" name="Status" class="input" onchange="this.form.submit()">
+                <option value="">Все</option>
+                @foreach (var s in Model.StatusOptions)
+                {
+                    <option value="@s" selected="@(Model.Status == s)">@s</option>
+                }
+            </select>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Применить</button>
+            <a asp-page="/Admin/Bookings/Index" class="btn btn--outline">Сбросить</a>
+        </div>
+    </form>
+
+    @if (!Model.Items.Any())
+    {
+        <p class="muted">За период записей не найдено.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th scope="col">Дата</th><th scope="col">Филиал</th><th scope="col">Клиент</th><th scope="col">Мастер</th><th scope="col">Услуга</th><th scope="col">Статус</th><th scope="col">Источник</th><th scope="col">Действия</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var b in Model.Items)
+            {
+                <tr>
+                    <td>@b.StartDateTime.ToString("dd.MM HH:mm")</td>
+                    <td>@b.Branch.Name</td>
+                    <td>@b.Client.Persona.LastName @b.Client.Persona.FirstName<br/><span class="muted">@b.Client.Persona.Phone</span></td>
+                    <td>@b.Master.Persona.LastName @b.Master.Persona.FirstName</td>
+                    <td>@b.Service.Name</td>
+                    <td><span class="badge badge--@b.Status.ToLowerInvariant()">@b.Status</span></td>
+                    <td><span class="muted">@b.Source</span></td>
+                    <td>
+                        @if (b.Status == BookingStatus.Created || b.Status == BookingStatus.Confirmed)
+                        {
+                            <form method="post" asp-page-handler="Cancel" asp-route-id="@b.BookingId" data-busy onsubmit="return confirm('Отменить запись клиента?')">
+                                <button type="submit" class="btn btn--danger btn--small">Отменить</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>
+
+@section Scripts {
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+}

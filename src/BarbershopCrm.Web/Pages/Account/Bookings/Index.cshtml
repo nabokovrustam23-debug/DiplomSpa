@@ -1,0 +1,84 @@
+@page "/Account/Bookings"
+@model BarbershopCrm.Web.Pages.Account.Bookings.IndexModel
+@{
+    ViewData["Title"] = "Мои записи";
+}
+
+<section class="card">
+    <h1>Мои записи</h1>
+    <p class="muted">Здесь видны ваши активные и прошедшие визиты. Отменить запись можно не позднее, чем за @Model.CancelCutoffHours ч до начала.</p>
+
+    <div class="form-actions">
+        <a asp-page="/BookingFlow/New" class="btn btn--primary">Записаться онлайн</a>
+        <a asp-page="/Lead/Index" class="btn btn--outline">Оставить заявку</a>
+    </div>
+
+    <h2>Активные</h2>
+    @if (!Model.Active.Any())
+    {
+        <p class="muted">Активных записей нет.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th scope="col">Дата</th><th scope="col">Филиал</th><th scope="col">Услуга</th><th scope="col">Мастер</th><th scope="col">Статус</th><th scope="col">Действия</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var b in Model.Active)
+            {
+                var canCancel = (b.StartDateTime - DateTime.UtcNow).TotalHours >= Model.CancelCutoffHours;
+                <tr>
+                    <td>@b.StartDateTime.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@b.Branch.Name</td>
+                    <td>@b.Service.Name</td>
+                    <td>@b.Master.Persona.LastName @b.Master.Persona.FirstName</td>
+                    <td><span class="badge badge--@b.Status.ToLowerInvariant()">@b.Status</span></td>
+                    <td>
+                        @if (canCancel)
+                        {
+                            <form method="post" asp-page-handler="Cancel" asp-route-id="@b.BookingId" data-busy onsubmit="return confirm('Отменить запись?')">
+                                <button type="submit" class="btn btn--danger btn--small">Отменить</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="muted">отмена недоступна</span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+
+    <h2>История</h2>
+    @if (!Model.Past.Any())
+    {
+        <p class="muted">Прошедших записей нет.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th scope="col">Дата</th><th scope="col">Филиал</th><th scope="col">Услуга</th><th scope="col">Мастер</th><th scope="col">Статус</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var b in Model.Past)
+            {
+                <tr>
+                    <td>@b.StartDateTime.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@b.Branch.Name</td>
+                    <td>@b.Service.Name</td>
+                    <td>@b.Master.Persona.LastName @b.Master.Persona.FirstName</td>
+                    <td><span class="badge badge--@b.Status.ToLowerInvariant()">@b.Status</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>
+
+@section Scripts {
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+}

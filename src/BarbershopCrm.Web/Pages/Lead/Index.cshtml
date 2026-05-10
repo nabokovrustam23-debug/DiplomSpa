@@ -1,0 +1,52 @@
+@page "/Lead"
+@model BarbershopCrm.Web.Pages.Lead.IndexModel
+@{
+    ViewData["Title"] = "Оставить заявку";
+}
+
+<section class="card">
+    <h1>Перезвоним и поможем выбрать слот</h1>
+    <p class="muted">Оставьте заявку — администратор свяжется с вами и подберёт удобное время.</p>
+
+    <div asp-validation-summary="All" class="alert alert--error"></div>
+
+    <form method="post" data-busy class="form-grid">
+        <div class="form-group">
+            <label asp-for="Input.Name">Имя</label>
+            <input asp-for="Input.Name" class="input" autocomplete="name" />
+            <span asp-validation-for="Input.Name" class="field-validation-error"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.Phone">Телефон</label>
+            <input asp-for="Input.Phone" class="input" autocomplete="tel" placeholder="+7 (900) 000-00-00" />
+            <span asp-validation-for="Input.Phone" class="field-validation-error"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.PreferredBranchId">Предпочитаемый филиал</label>
+            <select asp-for="Input.PreferredBranchId" asp-items="Model.Branches" class="input">
+                <option value="">— любой —</option>
+            </select>
+            <span asp-validation-for="Input.PreferredBranchId" class="field-validation-error"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.Comment">Комментарий (необязательно)</label>
+            <textarea asp-for="Input.Comment" class="input" maxlength="500" rows="3"></textarea>
+            <span asp-validation-for="Input.Comment" class="field-validation-error"></span>
+        </div>
+        <div class="form-group">
+            <label class="check">
+                <input asp-for="Input.ConsentGiven" type="checkbox" />
+                Я согласен на обработку персональных данных в соответствии с 152-ФЗ.
+            </label>
+            <span asp-validation-for="Input.ConsentGiven" class="field-validation-error"></span>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Отправить заявку</button>
+            <a class="btn btn--outline" asp-page="/Index">Отмена</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+}

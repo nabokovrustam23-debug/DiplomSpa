@@ -1003,3 +1003,80 @@ textarea:focus-visible {
 .master-week__bookings li { margin: 2px 0; font-size: 13px; }
 
 .table--compact th, .table--compact td { padding: var(--space-2); }
+
+/* ===== M4: Bookings ===== */
+.booking-wizard__filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+}
+.booking-wizard__slots h2 { margin-top: var(--space-4); }
+.slot-grid {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-3) 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--space-2);
+}
+.slot-grid__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+.slot-grid__item:has(input:checked) {
+    border-color: var(--color-accent);
+    background: rgba(201, 160, 99, 0.10);
+}
+.slot-grid__item:hover { border-color: var(--color-accent); }
+.slot-grid__item input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.slot-grid__time { font-weight: 600; }
+.slot-grid__master { color: var(--color-muted); font-size: 0.85em; }
+
+.badge--created   { color: var(--color-info);    background: rgba(123, 139, 150, 0.20); }
+.badge--confirmed { color: var(--color-success); background: rgba(122, 132, 113, 0.20); }
+.badge--cancelled { color: var(--color-error);   background: rgba(168, 103, 95, 0.20); }
+.badge--completed { color: var(--color-success); background: rgba(122, 132, 113, 0.30); }
+.badge--noshow    { color: var(--color-warning); background: rgba(201, 160, 99, 0.30); }
+.badge--new        { color: var(--color-info);    background: rgba(123, 139, 150, 0.20); }
+.badge--inprogress { color: var(--color-warning); background: rgba(201, 160, 99, 0.20); }
+.badge--done       { color: var(--color-success); background: rgba(122, 132, 113, 0.30); }
+.badge--rejected   { color: var(--color-error);   background: rgba(168, 103, 95, 0.20); }
+
+.booking-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+.booking-actions form { margin: 0; }
+.booking-actions__complete summary {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    list-style: none;
+}
+.booking-actions__complete[open] {
+    display: block;
+    width: 100%;
+    margin-top: var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2);
+    padding: var(--space-2);
+}
+.btn--small { padding: 4px 10px; font-size: 0.85em; }
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-3);
+    align-items: end;
+}

@@ -1,0 +1,17 @@
+@page "/Lead/Thanks"
+@model BarbershopCrm.Web.Pages.Lead.ThanksModel
+@{
+    ViewData["Title"] = "Заявка принята";
+}
+
+<section class="card">
+    <h1>Спасибо!</h1>
+    <p>Заявка отправлена. Администратор свяжется с вами в течение рабочего дня.</p>
+    <div class="form-actions">
+        <a asp-page="/Index" class="btn btn--primary">На главную</a>
+        @if (Model.IsAuthenticated)
+        {
+            <a asp-page="/Account/Bookings/Index" class="btn btn--outline">Мои записи</a>
+        }
+    </div>
+</section>

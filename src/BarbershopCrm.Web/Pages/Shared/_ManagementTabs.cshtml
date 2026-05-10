@@ -34,6 +34,16 @@
                asp-page="/Admin/Schedule/Index">
                 Расписание
             </a>
+            <a class="manage-tabs__tab @(currentTab == "bookings" ? "is-active" : "")"
+               role="tab" aria-selected="@(currentTab == "bookings" ? "true" : "false")"
+               asp-page="/Admin/Bookings/Index">
+                Записи
+            </a>
+            <a class="manage-tabs__tab @(currentTab == "leads" ? "is-active" : "")"
+               role="tab" aria-selected="@(currentTab == "leads" ? "true" : "false")"
+               asp-page="/Admin/Leads/Index">
+                Заявки
+            </a>
         }
     </div>
 </nav>

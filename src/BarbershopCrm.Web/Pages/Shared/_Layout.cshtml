@@ -35,7 +35,15 @@
                     <a asp-page="/Index">Главная</a>
                     <a asp-page="/Services/Index">Услуги</a>
                     <a asp-page="/Branches/Index">Филиалы</a>
-                    <a href="#">Записаться</a>
+                    @if (current is not null && current.RoleCode == RoleCode.Client)
+                    {
+                        <a asp-page="/BookingFlow/New">Записаться</a>
+                        <a asp-page="/Account/Bookings/Index">Мои записи</a>
+                    }
+                    else
+                    {
+                        <a asp-page="/Lead/Index">Записаться</a>
+                    }
 
                     @if (current is not null && current.RoleCode == RoleCode.Owner)
                     {
@@ -47,7 +55,8 @@
                     }
                     else if (current is not null && current.RoleCode == RoleCode.Master)
                     {
-                        <a asp-page="/MasterArea/Schedule" class="nav-manage">Моё расписание</a>
+                        <a asp-page="/MasterArea/Schedule" class="nav-manage">Расписание</a>
+                        <a asp-page="/MasterArea/Bookings" class="nav-manage">Записи</a>
                     }
 
                     @if (current is null)

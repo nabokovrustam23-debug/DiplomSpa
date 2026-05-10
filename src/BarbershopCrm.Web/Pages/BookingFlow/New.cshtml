@@ -1,0 +1,107 @@
+@page "/Booking/New"
+@model BarbershopCrm.Web.Pages.BookingFlow.NewModel
+@{
+    ViewData["Title"] = "Запись онлайн";
+    var minDate = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd");
+    var dateValue = !string.IsNullOrWhiteSpace(Model.Date) ? Model.Date! : minDate;
+}
+
+<section class="card booking-wizard">
+    <h1>Онлайн-запись</h1>
+    <p class="muted">Выберите филиал, услугу, мастера и удобное время.</p>
+
+    <div asp-validation-summary="All" class="alert alert--error"></div>
+
+    <form method="get" class="booking-wizard__filters" data-busy>
+        <div class="form-group">
+            <label for="BranchId">Филиал</label>
+            <select id="BranchId" name="BranchId" class="input" onchange="this.form.submit()">
+                <option value="">— выберите —</option>
+                @foreach (var b in Model.Branches)
+                {
+                    <option value="@b.BranchId" selected="@(Model.BranchId == b.BranchId)">@b.Name</option>
+                }
+            </select>
+        </div>
+        @if (Model.BranchId.HasValue)
+        {
+            <div class="form-group">
+                <label for="ServiceId">Услуга</label>
+                <select id="ServiceId" name="ServiceId" class="input" onchange="this.form.submit()">
+                    <option value="">— выберите —</option>
+                    @foreach (var s in Model.Services)
+                    {
+                        <option value="@s.ServiceId" selected="@(Model.ServiceId == s.ServiceId)">@s.Name (@s.DurationMinutes мин · @s.Price.ToString("0") ₽)</option>
+                    }
+                </select>
+            </div>
+        }
+        @if (Model.BranchId.HasValue && Model.ServiceId.HasValue)
+        {
+            <div class="form-group">
+                <label for="MasterId">Мастер</label>
+                <select id="MasterId" name="MasterId" class="input" onchange="this.form.submit()">
+                    <option value="">Любой свободный</option>
+                    @foreach (var m in Model.Masters)
+                    {
+                        <option value="@m.MasterId" selected="@(Model.MasterId == m.MasterId)">@m.FullName</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="Date">Дата</label>
+                <input type="date" id="Date" name="Date" class="input" value="@dateValue" min="@minDate" onchange="this.form.submit()" />
+            </div>
+        }
+    </form>
+
+    @if (Model.BranchId.HasValue && Model.ServiceId.HasValue)
+    {
+        <div class="booking-wizard__slots">
+            <h2>Свободные слоты на @Model.DateValue.ToString("dd.MM.yyyy")</h2>
+            @if (!Model.Slots.Any())
+            {
+                <p class="muted">Свободных слотов нет. Попробуйте другую дату или мастера.</p>
+            }
+            else
+            {
+                <form method="post" asp-page-handler="Confirm" data-busy>
+                    <input type="hidden" name="Confirm.BranchId" value="@Model.BranchId" />
+                    <input type="hidden" name="Confirm.ServiceId" value="@Model.ServiceId" />
+                    <ul class="slot-grid" role="listbox" aria-label="Свободные слоты">
+                        @foreach (var slot in Model.Slots)
+                        {
+                            var iso = slot.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss");
+                            var label = slot.StartDateTime.ToString("HH:mm");
+                            <li>
+                                <label class="slot-grid__item">
+                                    <input type="radio" name="Confirm.Slot" value="@iso" data-master="@slot.MasterId" required />
+                                    <span class="slot-grid__time">@label</span>
+                                    <span class="slot-grid__master">@slot.MasterName</span>
+                                </label>
+                            </li>
+                        }
+                    </ul>
+                    <input type="hidden" name="Confirm.MasterId" id="ConfirmMasterId" value="0" />
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn--primary">Подтвердить запись</button>
+                        <a asp-page="/Account/Bookings/Index" class="btn btn--outline">Мои записи</a>
+                    </div>
+                </form>
+            }
+        </div>
+    }
+</section>
+
+@section Scripts {
+    <script src="~/js/form-busy.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('input[name="Confirm.Slot"]')) {
+                var mid = e.target.getAttribute('data-master');
+                var hidden = document.getElementById('ConfirmMasterId');
+                if (hidden) hidden.value = mid || '0';
+            }
+        });
+    </script>
+}

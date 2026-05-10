@@ -1,0 +1,55 @@
+@page "/Owner/Analytics"
+@model BarbershopCrm.Web.Pages.Owner.Analytics.IndexModel
+@{
+    ViewData["Title"] = "Аналитика сети";
+    ViewData["ManagementTab"] = "analytics";
+}
+
+<partial name="_ManagementTabs" />
+
+<section class="card">
+    <div class="card__header">
+        <h1>Аналитика — @(Model.Snapshot?.BranchName ?? "вся сеть")</h1>
+        <div class="card__header-actions">
+            <a asp-page="/Owner/Analytics/Compare"
+               asp-route-from="@Model.FromValue.ToString("yyyy-MM-dd")"
+               asp-route-to="@Model.ToValue.ToString("yyyy-MM-dd")"
+               class="btn btn--outline">Сравнить филиалы</a>
+            <a asp-page="/Owner/Analytics/Index" asp-page-handler="Export"
+               asp-route-from="@Model.FromValue.ToString("yyyy-MM-dd")"
+               asp-route-to="@Model.ToValue.ToString("yyyy-MM-dd")"
+               asp-route-branchid="@Model.BranchId"
+               class="btn btn--outline">Экспорт CSV</a>
+        </div>
+    </div>
+
+    <form method="get" class="form-row">
+        <div class="form-group">
+            <label for="BranchId">Филиал</label>
+            <select id="BranchId" name="BranchId" class="input" onchange="this.form.submit()">
+                <option value="">Вся сеть</option>
+                @foreach (var b in Model.BranchOptions)
+                {
+                    <option value="@b.Value" selected="@(Model.BranchId?.ToString() == b.Value)">@b.Text</option>
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="From">С</label>
+            <input id="From" name="From" type="date" class="input" value="@Model.FromValue.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="form-group">
+            <label for="To">По</label>
+            <input id="To" name="To" type="date" class="input" value="@Model.ToValue.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Применить</button>
+            <a asp-page="/Owner/Analytics/Index" class="btn btn--outline">Сбросить</a>
+        </div>
+    </form>
+</section>
+
+@if (Model.Snapshot is not null)
+{
+    <partial name="_AnalyticsDashboard" model="Model.Snapshot" />
+}

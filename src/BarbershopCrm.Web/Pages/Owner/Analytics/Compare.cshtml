@@ -1,0 +1,74 @@
+@page "/Owner/Analytics/Compare"
+@using System.Globalization
+@model BarbershopCrm.Web.Pages.Owner.Analytics.CompareModel
+@{
+    ViewData["Title"] = "Сравнение филиалов";
+    ViewData["ManagementTab"] = "analytics";
+    var ru = CultureInfo.GetCultureInfo("ru-RU");
+    string Money(decimal v) => v.ToString("#,##0.00", ru) + " ₽";
+    string Pct(decimal v) => (v * 100m).ToString("0.0", ru) + " %";
+    string PctAlready(decimal v) => v.ToString("0.0", ru) + " %";
+}
+
+<partial name="_ManagementTabs" />
+
+<section class="card">
+    <div class="card__header">
+        <h1>Сравнение филиалов</h1>
+        <a asp-page="/Owner/Analytics/Index"
+           asp-route-from="@Model.FromValue.ToString("yyyy-MM-dd")"
+           asp-route-to="@Model.ToValue.ToString("yyyy-MM-dd")"
+           class="btn btn--outline">К дашборду</a>
+    </div>
+
+    <form method="get" class="form-row">
+        <div class="form-group">
+            <label for="From">С</label>
+            <input id="From" name="From" type="date" class="input" value="@Model.FromValue.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="form-group">
+            <label for="To">По</label>
+            <input id="To" name="To" type="date" class="input" value="@Model.ToValue.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Применить</button>
+        </div>
+    </form>
+
+    @if (Model.Rows.Count == 0)
+    {
+        <p class="muted">Активных филиалов не найдено.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Филиал</th>
+                    <th scope="col" class="num">Записей</th>
+                    <th scope="col" class="num">Завершено</th>
+                    <th scope="col" class="num">Выручка</th>
+                    <th scope="col" class="num">Средний чек</th>
+                    <th scope="col" class="num">Средняя загрузка</th>
+                    <th scope="col" class="num">% отмен</th>
+                    <th scope="col" class="num">% no-show</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.Rows)
+            {
+                <tr>
+                    <td>@r.BranchName</td>
+                    <td class="num">@r.TotalBookings</td>
+                    <td class="num">@r.CompletedBookings</td>
+                    <td class="num">@Money(r.Revenue)</td>
+                    <td class="num">@Money(r.AverageTicket)</td>
+                    <td class="num">@PctAlready(r.AverageUtilizationPercent)</td>
+                    <td class="num">@Pct(r.CancelRate)</td>
+                    <td class="num">@Pct(r.NoShowRate)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>

@@ -44,6 +44,11 @@
                asp-page="/Admin/Leads/Index">
                 Заявки
             </a>
+            <a class="manage-tabs__tab @(currentTab == "analytics" ? "is-active" : "")"
+               role="tab" aria-selected="@(currentTab == "analytics" ? "true" : "false")"
+               asp-page="@(isOwner ? "/Owner/Analytics/Index" : "/Admin/Analytics/Index")">
+                Аналитика
+            </a>
         }
     </div>
 </nav>

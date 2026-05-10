@@ -49,19 +49,19 @@
                     </div>
                     @if (bks is { Count: > 0 })
                     {
-                        <details class="master-week__bookings">
-                            <summary>Записи: @bks.Count</summary>
-                            <ul>
-                                @foreach (var b in bks)
-                                {
-                                    <li>
-                                        <strong>@b.StartDateTime.ToString("HH:mm")</strong> · @b.Service.Name
-                                        · <span class="faint">@b.Client.Persona.FullName</span>
-                                        · <em>@b.Status</em>
-                                    </li>
-                                }
-                            </ul>
-                        </details>
+                        <div class="master-week__bookings-timeline">
+                            @foreach (var b in bks)
+                            {
+                                <div class="timeline-row">
+                                    <div class="timeline-time">@b.StartDateTime.ToString("HH:mm")</div>
+                                    <div class="timeline-card">
+                                        <div class="timeline-card-title">@b.Client.Persona.FullName</div>
+                                        <div class="timeline-card-service">✂ @b.Service.Name.ToUpper()</div>
+                                        <div class="timeline-card-duration">@(b.DurationMinutes / 60 > 0 ? $"{b.DurationMinutes / 60}ч " : "")@(b.DurationMinutes % 60 > 0 ? $"{b.DurationMinutes % 60}м" : "")</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
                     }
                 </li>
             }

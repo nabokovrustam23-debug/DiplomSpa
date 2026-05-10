@@ -997,10 +997,18 @@ textarea:focus-visible {
 .master-week__day { padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
 .master-week__day h3 { margin: 0 0 var(--space-2); font-size: 15px; text-transform: capitalize; }
 .master-week__intervals { display: flex; flex-wrap: wrap; gap: var(--space-1); }
-.master-week__bookings { margin-top: var(--space-2); }
-.master-week__bookings summary { cursor: pointer; font-size: 14px; }
-.master-week__bookings ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
-.master-week__bookings li { margin: 2px 0; font-size: 13px; }
+.master-week__bookings-timeline { margin-top: var(--space-4); }
+.timeline-row { display: flex; border-top: 1px solid var(--color-border); padding: var(--space-3) 0; }
+.timeline-row:first-child { border-top: none; padding-top: 0; }
+.timeline-time { width: 60px; font-size: 14px; font-weight: 600; color: #d4af37; font-variant-numeric: tabular-nums; flex-shrink: 0; padding-top: 16px; }
+.timeline-card { flex-grow: 1; background: #1a1a1a; border-radius: var(--radius-sm); border: 1px solid #2a2a2a; padding: var(--space-3); border-left: 3px solid #d4af37; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.timeline-card-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; color: #fff; }
+.timeline-card-service { font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+.timeline-card-duration { font-size: 11px; color: #999; background: #222; display: inline-block; padding: 2px 6px; border-radius: 4px; }
+
+[data-theme="light"] .timeline-card { background: #fff; border-color: #eee; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+[data-theme="light"] .timeline-card-title { color: var(--color-text); }
+[data-theme="light"] .timeline-card-duration { background: #f5f5f5; color: #555; }
 
 .table--compact th, .table--compact td { padding: var(--space-2); }
 

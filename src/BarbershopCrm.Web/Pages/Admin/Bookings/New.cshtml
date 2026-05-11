@@ -3,13 +3,16 @@
 @{
     ViewData["Title"] = "Новая запись";
     ViewData["ManagementTab"] = "bookings";
+    var minDate = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd");
+    var dateValue = !string.IsNullOrWhiteSpace(Model.Date) ? Model.Date! : minDate;
+    var hasSlots = Model.BranchId.HasValue && Model.ServiceId.HasValue;
 }
 
 <partial name="_ManagementTabs" />
 
-<section class="card">
-    <h1>Создать запись вручную</h1>
-    <p class="muted">Используйте при оформлении по звонку. Источник записи будет «Admin».</p>
+<section class="card booking-wizard">
+    <h1>Создание записи администратором</h1>
+    <p class="muted">Пошагово: выберите филиал → услугу → мастера → время → данные клиента. Источник записи будет «Admin».</p>
 
     @if (!string.IsNullOrEmpty(Model.LeadHint))
     {
@@ -18,68 +21,152 @@
 
     <div asp-validation-summary="All" class="alert alert--error"></div>
 
-    <form method="post" data-busy class="form-grid">
+    @* ---- Filters (GET) ------------------------------------------------- *@
+    <form method="get" class="booking-wizard__filters" data-busy>
         @if (Model.LeadId.HasValue)
         {
             <input type="hidden" name="LeadId" value="@Model.LeadId" />
         }
         <div class="form-group">
-            <label asp-for="Input.BranchId">Филиал</label>
-            <select asp-for="Input.BranchId" asp-items="Model.Branches" class="input">
+            <label for="BranchId">Шаг 1. Филиал</label>
+            <select id="BranchId" name="BranchId" class="input" onchange="this.form.submit()">
                 <option value="">— выберите —</option>
+                @foreach (var b in Model.Branches)
+                {
+                    <option value="@b.BranchId" selected="@(Model.BranchId == b.BranchId)">@b.Name</option>
+                }
             </select>
-            <span asp-validation-for="Input.BranchId" class="field-validation-error"></span>
         </div>
-        <div class="form-group">
-            <label asp-for="Input.ServiceId">Услуга</label>
-            <select asp-for="Input.ServiceId" asp-items="Model.Services" class="input">
-                <option value="">— выберите —</option>
-            </select>
-            <span asp-validation-for="Input.ServiceId" class="field-validation-error"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="Input.MasterId">Мастер</label>
-            <select asp-for="Input.MasterId" asp-items="Model.Masters" class="input">
-                <option value="">— выберите филиал/услугу —</option>
-            </select>
-            <span asp-validation-for="Input.MasterId" class="field-validation-error"></span>
-        </div>
-        <div class="form-group">
-            <label for="Input_StartDateTime">Дата и время</label>
-            <input id="Input_StartDateTime" name="Input.StartDateTime" type="datetime-local" class="input" step="900"
-                   value="@(Model.Input.StartDateTime?.ToString("yyyy-MM-ddTHH:mm"))" required />
-            <span asp-validation-for="Input.StartDateTime" class="field-validation-error"></span>
-            <small class="faint">Шаг 15 минут. Время должно укладываться в смену мастера.</small>
-        </div>
-        <h2>Клиент</h2>
-        <div class="form-group">
-            <label asp-for="Input.LastName">Фамилия</label>
-            <input asp-for="Input.LastName" class="input" autocomplete="family-name" />
-            <span asp-validation-for="Input.LastName" class="field-validation-error"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="Input.FirstName">Имя</label>
-            <input asp-for="Input.FirstName" class="input" autocomplete="given-name" />
-            <span asp-validation-for="Input.FirstName" class="field-validation-error"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="Input.Phone">Телефон</label>
-            <input asp-for="Input.Phone" class="input" autocomplete="tel" placeholder="+7 (900) 000-00-00" />
-            <span asp-validation-for="Input.Phone" class="field-validation-error"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="Input.Email">Email (необязательно)</label>
-            <input asp-for="Input.Email" class="input" type="email" autocomplete="email" />
-            <span asp-validation-for="Input.Email" class="field-validation-error"></span>
-        </div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn btn--primary">Создать запись</button>
-            <a asp-page="/Admin/Bookings/Index" class="btn btn--outline">Отмена</a>
-        </div>
+        @if (Model.BranchId.HasValue)
+        {
+            <div class="form-group">
+                <label for="ServiceId">Шаг 2. Услуга</label>
+                <select id="ServiceId" name="ServiceId" class="input" onchange="this.form.submit()">
+                    <option value="">— выберите —</option>
+                    @foreach (var s in Model.Services)
+                    {
+                        <option value="@s.ServiceId" selected="@(Model.ServiceId == s.ServiceId)">@s.Name (@s.DurationMinutes мин · @s.Price.ToString("0") ₽)</option>
+                    }
+                </select>
+            </div>
+        }
+        @if (Model.BranchId.HasValue && Model.ServiceId.HasValue)
+        {
+            <div class="form-group">
+                <label for="MasterId">Шаг 3. Мастер</label>
+                <select id="MasterId" name="MasterId" class="input" onchange="this.form.submit()">
+                    <option value="">Любой свободный</option>
+                    @foreach (var m in Model.Masters)
+                    {
+                        <option value="@m.MasterId" selected="@(Model.MasterId == m.MasterId)">@m.FullName</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="Date">Дата</label>
+                <input type="date" id="Date" name="Date" class="input" value="@dateValue" min="@minDate" onchange="this.form.submit()" />
+            </div>
+        }
     </form>
+
+    @* ---- Slot grid + client form (POST) ------------------------------- *@
+    @if (hasSlots)
+    {
+        <form method="post" data-busy>
+            @if (Model.LeadId.HasValue)
+            {
+                <input type="hidden" name="LeadId" value="@Model.LeadId" />
+            }
+            <input type="hidden" name="Confirm.BranchId" value="@Model.BranchId" />
+            <input type="hidden" name="Confirm.ServiceId" value="@Model.ServiceId" />
+            <input type="hidden" name="Confirm.MasterId" id="ConfirmMasterId" value="0" />
+
+            <div class="booking-wizard__slots">
+                <h2>Шаг 4. Свободные слоты на @Model.DateValue.ToString("dd.MM.yyyy")</h2>
+                @if (!Model.Slots.Any())
+                {
+                    <p class="muted">Свободных слотов нет. Попробуйте другую дату или мастера.</p>
+                }
+                else
+                {
+                    var slotsByMaster = Model.Slots
+                        .GroupBy(s => new { s.MasterId, s.MasterName })
+                        .OrderBy(g => g.Key.MasterName)
+                        .ToList();
+                    <div class="slot-board" role="group" aria-label="Свободные слоты, сгруппированные по мастерам">
+                        @foreach (var group in slotsByMaster)
+                        {
+                            <div class="slot-column">
+                                <div class="slot-column__head">@group.Key.MasterName</div>
+                                <ul class="slot-column__list" role="listbox" aria-label="@group.Key.MasterName">
+                                    @foreach (var slot in group.OrderBy(s => s.StartDateTime))
+                                    {
+                                        var iso = slot.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss");
+                                        var label = slot.StartDateTime.ToString("HH:mm");
+                                        <li>
+                                            <label class="slot-chip">
+                                                <input type="radio" name="Confirm.Slot" value="@iso" data-master="@slot.MasterId" required />
+                                                <span class="slot-chip__time">@label</span>
+                                            </label>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    </div>
+                    <span asp-validation-for="Confirm.Slot" class="field-error"></span>
+                }
+            </div>
+
+            <fieldset class="booking-wizard__client">
+                <legend>Шаг 5. Данные клиента</legend>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="Confirm.LastName">Фамилия</label>
+                        <input asp-for="Confirm.LastName" class="input" autocomplete="family-name" required />
+                        <span asp-validation-for="Confirm.LastName" class="field-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Confirm.FirstName">Имя</label>
+                        <input asp-for="Confirm.FirstName" class="input" autocomplete="given-name" required />
+                        <span asp-validation-for="Confirm.FirstName" class="field-error"></span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="Confirm.Phone">Телефон</label>
+                        <input asp-for="Confirm.Phone" class="input" autocomplete="tel" placeholder="+7 (900) 000-00-00" required />
+                        <span asp-validation-for="Confirm.Phone" class="field-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Confirm.Email">Email (необязательно)</label>
+                        <input asp-for="Confirm.Email" class="input" type="email" autocomplete="email" />
+                        <span asp-validation-for="Confirm.Email" class="field-error"></span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn--primary">Создать запись</button>
+                <a asp-page="/Admin/Bookings/Index" class="btn btn--outline">Отмена</a>
+            </div>
+        </form>
+    }
+    else
+    {
+        <p class="muted">Выберите филиал и услугу, чтобы увидеть свободные слоты.</p>
+    }
 </section>
 
 @section Scripts {
     <script src="~/js/form-busy.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('input[name="Confirm.Slot"]')) {
+                var mid = e.target.getAttribute('data-master');
+                var hidden = document.getElementById('ConfirmMasterId');
+                if (hidden) hidden.value = mid || '0';
+            }
+        });
+    </script>
 }

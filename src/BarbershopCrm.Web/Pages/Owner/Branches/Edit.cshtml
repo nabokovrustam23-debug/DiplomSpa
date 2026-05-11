@@ -23,18 +23,11 @@
             <span asp-validation-for="Input.Name" class="field-error"></span>
         </div>
         <div class="form-group">
-            <label asp-for="Input.Address">Адрес <span class="faint">— начните вводить, появятся подсказки</span></label>
-            <input asp-for="Input.Address" required class="input"
-                   data-address-suggest
-                   data-lat-target="#Input_Latitude"
-                   data-lon-target="#Input_Longitude" />
+            <label asp-for="Input.Address">Адрес</label>
+            <input asp-for="Input.Address" required class="input" />
             <span asp-validation-for="Input.Address" class="field-error"></span>
             <input asp-for="Input.Latitude" type="hidden" id="Input_Latitude" />
             <input asp-for="Input.Longitude" type="hidden" id="Input_Longitude" />
-            @if (Model.Input.Latitude.HasValue && Model.Input.Longitude.HasValue)
-            {
-                <small class="faint">Координаты: @Model.Input.Latitude.Value.ToString("0.#####", System.Globalization.CultureInfo.InvariantCulture), @Model.Input.Longitude.Value.ToString("0.#####", System.Globalization.CultureInfo.InvariantCulture)</small>
-            }
         </div>
         <div class="form-group">
             <label asp-for="Input.Phone">Телефон</label>
@@ -94,6 +87,5 @@
 </section>
 
 @section Scripts {
-    <script src="~/js/address-suggest.js" asp-append-version="true"></script>
     <script src="~/js/form-busy.js" asp-append-version="true"></script>
 }

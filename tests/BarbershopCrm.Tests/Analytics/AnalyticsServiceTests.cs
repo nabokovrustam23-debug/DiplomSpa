@@ -367,23 +367,25 @@ public class AnalyticsServiceTests : IAsyncLifetime
             csv[2].Should().Be(0xBF);
 
             var text = System.Text.Encoding.UTF8.GetString(csv, 3, csv.Length - 3);
-            text.Should().StartWith("BookingId,Branch,Master,Service,Client");
-            text.Should().Contain("Completed");
-            text.Should().Contain("Cancelled");
+            // Префикс sep= + русские заголовки + ';' разделитель для Excel ru-RU.
+            text.Should().StartWith("sep=;\r\nID записи;Филиал;Мастер;Услуга;Клиент");
+            // Статусы переведены через StatusLabels.
+            text.Should().Contain("Завершена");
+            text.Should().Contain("Отменена");
         }
     }
 
     [Fact]
-    public void CsvExporter_HandlesQuotingAndCommas()
+    public void CsvExporter_HandlesQuotingAndSemicolons()
     {
         var rows = new List<BookingExportRow>
         {
-            new(1, "Бранч с, запятой", "Иванов \"Иван\"", "Стрижка", "Клиент",
+            new(1, "Бранч с; точкой с запятой", "Иванов \"Иван\"", "Стрижка", "Клиент",
                 new DateTime(2026, 1, 1, 10, 0, 0), 30, 500m, "Completed", "Online", null, null),
         };
         var csv = CsvExporter.BuildBookingsCsv(rows);
         var text = System.Text.Encoding.UTF8.GetString(csv, 3, csv.Length - 3);
-        text.Should().Contain("\"Бранч с, запятой\"");
+        text.Should().Contain("\"Бранч с; точкой с запятой\"");
         text.Should().Contain("\"Иванов \"\"Иван\"\"\"");
     }
 

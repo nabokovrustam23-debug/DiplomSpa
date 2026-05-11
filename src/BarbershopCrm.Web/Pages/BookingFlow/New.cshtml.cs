@@ -44,10 +44,10 @@ public class NewModel : AppPageModel
 
     public sealed class ConfirmInput
     {
-        [Required] public int BranchId { get; set; }
-        [Required] public int ServiceId { get; set; }
-        [Required] public int MasterId { get; set; }
-        [Required] public string Slot { get; set; } = string.Empty; // ISO local datetime
+        [Required(ErrorMessage = "Выберите филиал.")] public int BranchId { get; set; }
+        [Required(ErrorMessage = "Выберите услугу.")] public int ServiceId { get; set; }
+        [Required(ErrorMessage = "Выберите мастера.")] public int MasterId { get; set; }
+        [Required(ErrorMessage = "Выберите время.")] public string Slot { get; set; } = string.Empty; // ISO local datetime
     }
 
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)

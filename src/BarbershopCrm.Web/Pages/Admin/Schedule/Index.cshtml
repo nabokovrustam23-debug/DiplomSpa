@@ -138,14 +138,7 @@
         </footer>
 
         <p class="muted timeline-edit-hint">
-            Чтобы изменить смены, обеды или отпуска конкретного мастера, перейдите в карточку:
-            @{ var sep = ""; }
-            @foreach (var m in Model.Masters)
-            {
-                @Html.Raw(sep)
-                <a asp-page="Edit" asp-route-masterId="@m.MasterId" asp-route-date="@Model.DateValue.ToString("yyyy-MM-dd")">@m.Persona.ShortName</a>
-                sep = ", ";
-            }
+            Смены и отгулы задают мастера в своём кабинете. Администратор видит расписание, но не редактирует его.
         </p>
     }
 </section>

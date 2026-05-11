@@ -92,16 +92,16 @@ public sealed class RegisterModel : PageModel
     public sealed class RegisterInput
     {
         [Required(ErrorMessage = "Введите фамилию.")]
-        [StringLength(100)]
+        [StringLength(100, ErrorMessage = "Фамилия слишком длинная (макс. 100 символов).")]
         [Display(Name = "Фамилия")]
         public string LastName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Введите имя.")]
-        [StringLength(100)]
+        [StringLength(100, ErrorMessage = "Имя слишком длинное (макс. 100 символов).")]
         [Display(Name = "Имя")]
         public string FirstName { get; set; } = string.Empty;
 
-        [StringLength(100)]
+        [StringLength(100, ErrorMessage = "Отчество слишком длинное (макс. 100 символов).")]
         [Display(Name = "Отчество")]
         public string? MiddleName { get; set; }
 

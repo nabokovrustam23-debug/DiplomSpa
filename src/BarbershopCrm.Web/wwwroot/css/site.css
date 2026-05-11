@@ -292,6 +292,9 @@ a:hover { color: var(--color-accent-hover); }
 }
 
 .card + .card { margin-top: var(--space-4); }
+.grid-3 > .card + .card,
+.grid-3 .card + .card,
+[class*="grid"] > .card + .card { margin-top: 0; }
 
 .btn {
     display: inline-flex;
@@ -988,6 +991,9 @@ textarea:focus-visible {
 .breadcrumbs a:hover { color: var(--color-text); }
 
 .card + .card { margin-top: var(--space-5); }
+.grid-3 > .card + .card,
+.grid-3 .card + .card,
+[class*="grid"] > .card + .card { margin-top: 0; }
 
 .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 

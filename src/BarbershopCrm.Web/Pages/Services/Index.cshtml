@@ -2,6 +2,12 @@
 @model BarbershopCrm.Web.Pages.Services.IndexModel
 @{
     ViewData["Title"] = "Услуги";
+    var hasFilters = !string.IsNullOrWhiteSpace(Model.Q)
+        || !string.IsNullOrWhiteSpace(Model.Category)
+        || Model.MinPrice.HasValue
+        || Model.MaxPrice.HasValue
+        || Model.MaxDuration.HasValue
+        || (!string.IsNullOrWhiteSpace(Model.Sort) && Model.Sort != "name");
 }
 
 <header class="page-header">
@@ -9,13 +15,85 @@
     <p class="muted">Единый прайс на все филиалы сети «Тихий час».</p>
 </header>
 
+<form method="get" class="services-filters card">
+    <div class="services-filters__row">
+        <div class="form-group services-filters__search">
+            <label asp-for="Q">Поиск</label>
+            <input asp-for="Q" class="input" type="search" placeholder="например, борода или стрижка"
+                   autocomplete="off" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Sort">Сортировка</label>
+            <select asp-for="Sort" class="input">
+                <option value="">По названию</option>
+                <option value="price-asc">Цена: дешевле</option>
+                <option value="price-desc">Цена: дороже</option>
+                <option value="duration-asc">Длительность: короче</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="services-filters__chips" role="tablist" aria-label="Категории">
+        <a class="chip @(string.IsNullOrEmpty(Model.Category) ? "chip--active" : "")"
+           asp-route-q="@Model.Q"
+           asp-route-category=""
+           asp-route-minPrice="@Model.MinPrice"
+           asp-route-maxPrice="@Model.MaxPrice"
+           asp-route-maxDuration="@Model.MaxDuration"
+           asp-route-sort="@Model.Sort">Все</a>
+        @foreach (var c in Model.Categories)
+        {
+            <a class="chip @(Model.Category == c.Slug ? "chip--active" : "")"
+               asp-route-q="@Model.Q"
+               asp-route-category="@c.Slug"
+               asp-route-minPrice="@Model.MinPrice"
+               asp-route-maxPrice="@Model.MaxPrice"
+               asp-route-maxDuration="@Model.MaxDuration"
+               asp-route-sort="@Model.Sort">@c.Title</a>
+        }
+    </div>
+
+    <div class="services-filters__row services-filters__ranges">
+        <div class="form-group">
+            <label asp-for="MinPrice">Цена от, ₽</label>
+            <input asp-for="MinPrice" class="input" type="number" min="0" step="50" inputmode="numeric" />
+        </div>
+        <div class="form-group">
+            <label asp-for="MaxPrice">Цена до, ₽</label>
+            <input asp-for="MaxPrice" class="input" type="number" min="0" step="50" inputmode="numeric" />
+        </div>
+        <div class="form-group">
+            <label asp-for="MaxDuration">Длительность до, мин</label>
+            <input asp-for="MaxDuration" class="input" type="number" min="0" step="5" inputmode="numeric" />
+        </div>
+        <div class="form-actions services-filters__actions">
+            <button type="submit" class="btn btn--primary">Применить</button>
+            @if (hasFilters)
+            {
+                <a class="btn btn--outline" asp-page="/Services/Index">Сбросить</a>
+            }
+        </div>
+    </div>
+</form>
+
+<p class="muted services-summary">
+    @if (hasFilters)
+    {
+        <text>Показано <strong>@Model.VisibleCount</strong> из <strong>@Model.TotalCount</strong> услуг.</text>
+    }
+    else
+    {
+        <text>Всего услуг: <strong>@Model.TotalCount</strong>.</text>
+    }
+</p>
+
 @if (Model.Services.Count == 0)
 {
-    <p class="muted">Услуг пока нет.</p>
+    <p class="muted">По заданным фильтрам ничего не нашлось. Попробуйте смягчить условия.</p>
 }
 else
 {
-    <div class="grid-3" style="margin-top: var(--space-4);">
+    <div class="grid-3" style="margin-top: var(--space-3);">
         @foreach (var service in Model.Services)
         {
             <article class="card service-card">
@@ -27,7 +105,10 @@ else
                 {
                     <div class="image-thumb image-placeholder service-card__image" aria-hidden="true">фото скоро появится</div>
                 }
-                <h3>@service.Name</h3>
+                <div class="service-card__head">
+                    <h3>@service.Name</h3>
+                    <span class="badge badge--cat">@Model.CategoryOfService(service)</span>
+                </div>
                 @if (!string.IsNullOrWhiteSpace(service.Description))
                 {
                     <p class="muted">@service.Description</p>

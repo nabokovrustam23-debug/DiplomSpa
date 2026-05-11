@@ -22,9 +22,9 @@
             <span asp-validation-for="Input.Phone" class="field-validation-error"></span>
         </div>
         <div class="form-group">
-            <label asp-for="Input.PreferredBranchId">Предпочитаемый филиал</label>
-            <select asp-for="Input.PreferredBranchId" asp-items="Model.Branches" class="input">
-                <option value="">— любой —</option>
+            <label asp-for="Input.PreferredBranchId">Филиал</label>
+            <select asp-for="Input.PreferredBranchId" asp-items="Model.Branches" class="input" required>
+                <option value="">— выберите филиал —</option>
             </select>
             <span asp-validation-for="Input.PreferredBranchId" class="field-validation-error"></span>
         </div>

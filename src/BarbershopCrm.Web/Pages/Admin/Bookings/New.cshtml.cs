@@ -27,10 +27,12 @@ public class NewModel : AppPageModel
     }
 
     [BindProperty] public InputModel Input { get; set; } = new();
+    [BindProperty(SupportsGet = true)] public int? LeadId { get; set; }
 
     public List<SelectListItem> Branches { get; private set; } = new();
     public List<SelectListItem> Services { get; private set; } = new();
     public List<SelectListItem> Masters { get; private set; } = new();
+    public string? LeadHint { get; private set; }
 
     public sealed class InputModel
     {
@@ -47,6 +49,38 @@ public class NewModel : AppPageModel
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
         if (Current is null) return Forbid();
+
+        if (LeadId.HasValue)
+        {
+            var lead = await _db.Leads.AsNoTracking()
+                .FirstOrDefaultAsync(l => l.LeadId == LeadId.Value, ct);
+            if (lead is not null)
+            {
+                if (Current.RoleCode == RoleCode.Admin && Current.BranchId.HasValue
+                    && lead.PreferredBranchId.HasValue
+                    && lead.PreferredBranchId != Current.BranchId)
+                {
+                    return Forbid();
+                }
+
+                var parts = (lead.RawName ?? string.Empty).Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2)
+                {
+                    Input.LastName = parts[0];
+                    Input.FirstName = parts[1];
+                }
+                else if (parts.Length == 1)
+                {
+                    Input.FirstName = parts[0];
+                }
+                Input.Phone = lead.RawPhone ?? string.Empty;
+                if (lead.PreferredBranchId.HasValue)
+                    Input.BranchId = lead.PreferredBranchId.Value;
+
+                LeadHint = $"Заявка #{lead.LeadId} от {lead.CreatedAt:dd.MM.yyyy HH:mm} — {lead.RawName}, {lead.RawPhone}.";
+            }
+        }
+
         await LoadOptionsAsync(ct);
         return Page();
     }
@@ -105,7 +139,21 @@ public class NewModel : AppPageModel
             return Page();
         }
 
-        TempData["Success"] = "Запись создана.";
+        if (LeadId.HasValue)
+        {
+            var lead = await _db.Leads.FirstOrDefaultAsync(l => l.LeadId == LeadId.Value, ct);
+            if (lead is not null && lead.Status != LeadStatus.Done && lead.Status != LeadStatus.Rejected)
+            {
+                lead.Status = LeadStatus.Done;
+                lead.ProcessedByUserId = Current.UserId;
+                lead.ProcessedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync(ct);
+            }
+        }
+
+        TempData["Success"] = LeadId.HasValue
+            ? "Запись создана, заявка закрыта."
+            : "Запись создана.";
         return RedirectToPage("/Admin/Bookings/Index", new { BranchId = Input.BranchId });
     }
 

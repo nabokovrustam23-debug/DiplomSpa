@@ -65,23 +65,34 @@
             }
             else
             {
+                var slotsByMaster = Model.Slots
+                    .GroupBy(s => new { s.MasterId, s.MasterName })
+                    .OrderBy(g => g.Key.MasterName)
+                    .ToList();
                 <form method="post" asp-page-handler="Confirm" data-busy>
                     <input type="hidden" name="Confirm.BranchId" value="@Model.BranchId" />
                     <input type="hidden" name="Confirm.ServiceId" value="@Model.ServiceId" />
-                    <ul class="slot-grid" role="listbox" aria-label="Свободные слоты">
-                        @foreach (var slot in Model.Slots)
+                    <div class="slot-board" role="group" aria-label="Свободные слоты, сгруппированные по мастерам">
+                        @foreach (var group in slotsByMaster)
                         {
-                            var iso = slot.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss");
-                            var label = slot.StartDateTime.ToString("HH:mm");
-                            <li>
-                                <label class="slot-grid__item">
-                                    <input type="radio" name="Confirm.Slot" value="@iso" data-master="@slot.MasterId" required />
-                                    <span class="slot-grid__time">@label</span>
-                                    <span class="slot-grid__master">@slot.MasterName</span>
-                                </label>
-                            </li>
+                            <div class="slot-column">
+                                <div class="slot-column__head">@group.Key.MasterName</div>
+                                <ul class="slot-column__list" role="listbox" aria-label="@group.Key.MasterName">
+                                    @foreach (var slot in group.OrderBy(s => s.StartDateTime))
+                                    {
+                                        var iso = slot.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss");
+                                        var label = slot.StartDateTime.ToString("HH:mm");
+                                        <li>
+                                            <label class="slot-chip">
+                                                <input type="radio" name="Confirm.Slot" value="@iso" data-master="@slot.MasterId" required />
+                                                <span class="slot-chip__time">@label</span>
+                                            </label>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
                         }
-                    </ul>
+                    </div>
                     <input type="hidden" name="Confirm.MasterId" id="ConfirmMasterId" value="0" />
                     <div class="form-actions">
                         <button type="submit" class="btn btn--primary">Подтвердить запись</button>

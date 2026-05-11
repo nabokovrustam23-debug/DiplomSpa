@@ -179,6 +179,34 @@ public sealed class NotificationService : INotificationService
             .ToListAsync(ct);
     }
 
+    public async Task<(IReadOnlyList<Notification> Items, int TotalCount)> GetForRecipientPagedAsync(
+        int recipientPersonaId,
+        ReadFilter filter,
+        bool oldestFirst,
+        int page,
+        int pageSize,
+        CancellationToken ct = default)
+    {
+        var q = _db.Notifications.AsNoTracking()
+            .Where(n => n.RecipientPersonaId == recipientPersonaId
+                     && n.Channel == NotificationChannel.InApp);
+        q = filter switch
+        {
+            ReadFilter.Unread => q.Where(n => n.ReadAt == null),
+            ReadFilter.Read   => q.Where(n => n.ReadAt != null),
+            _ => q,
+        };
+
+        var total = await q.CountAsync(ct);
+        var ordered = oldestFirst
+            ? q.OrderBy(n => n.CreatedAt)
+            : q.OrderByDescending(n => n.CreatedAt);
+
+        var skip = Math.Max(0, (page - 1) * pageSize);
+        var items = await ordered.Skip(skip).Take(Math.Max(1, pageSize)).ToListAsync(ct);
+        return (items, total);
+    }
+
     public async Task<int> GetUnreadCountAsync(int recipientPersonaId, CancellationToken ct = default)
     {
         return await _db.Notifications.AsNoTracking()

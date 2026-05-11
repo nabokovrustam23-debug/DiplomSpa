@@ -31,6 +31,20 @@ try
     builder.Services.AddRazorPages(options =>
     {
         options.Conventions.ConfigureFilter(new Microsoft.AspNetCore.Mvc.TypeFilterAttribute(typeof(AuthorizePageFilter)));
+    }).AddMvcOptions(o =>
+    {
+        var p = o.ModelBindingMessageProvider;
+        p.SetValueIsInvalidAccessor(v => $"Значение «{v}» некорректно.");
+        p.SetAttemptedValueIsInvalidAccessor((v, name) => $"Значение «{v}» в поле «{name}» некорректно.");
+        p.SetUnknownValueIsInvalidAccessor(name => $"Значение в поле «{name}» некорректно.");
+        p.SetMissingBindRequiredValueAccessor(name => $"Поле «{name}» обязательно.");
+        p.SetMissingKeyOrValueAccessor(() => "Не указано значение.");
+        p.SetMissingRequestBodyRequiredValueAccessor(() => "Пустое тело запроса.");
+        p.SetValueMustNotBeNullAccessor(v => $"Значение «{v}» не может быть пустым.");
+        p.SetNonPropertyAttemptedValueIsInvalidAccessor(v => $"Значение «{v}» некорректно.");
+        p.SetNonPropertyUnknownValueIsInvalidAccessor(() => "Некорректное значение.");
+        p.SetNonPropertyValueMustBeANumberAccessor(() => "Значение должно быть числом.");
+        p.SetValueMustBeANumberAccessor(name => $"Поле «{name}» должно быть числом.");
     });
 
     builder.Services.AddAntiforgery();

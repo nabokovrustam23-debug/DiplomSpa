@@ -45,10 +45,14 @@
                     <td>@l.Comment</td>
                     <td><span class="badge badge--@l.Status.ToLowerInvariant()">@StatusLabels.LeadStatus(l.Status)</span></td>
                     <td class="booking-actions">
+                        @if (l.Status != LeadStatus.Done && l.Status != LeadStatus.Rejected)
+                        {
+                            <a class="btn btn--primary btn--small" asp-page="/Admin/Bookings/New" asp-route-leadId="@l.LeadId">Создать запись</a>
+                        }
                         @if (l.Status == LeadStatus.New)
                         {
                             <form method="post" asp-page-handler="Take" asp-route-id="@l.LeadId" data-busy>
-                                <button class="btn btn--primary btn--small" type="submit">В работу</button>
+                                <button class="btn btn--outline btn--small" type="submit">В работу</button>
                             </form>
                         }
                         @if (l.Status != LeadStatus.Done && l.Status != LeadStatus.Rejected)

@@ -18,7 +18,21 @@ public interface INotificationService
     Task OnLeadCreatedAsync(int leadId, CancellationToken ct = default);
 
     Task<IReadOnlyList<Notification>> GetForRecipientAsync(int recipientPersonaId, bool unreadOnly, int take, CancellationToken ct = default);
+    Task<(IReadOnlyList<Notification> Items, int TotalCount)> GetForRecipientPagedAsync(
+        int recipientPersonaId,
+        ReadFilter filter,
+        bool oldestFirst,
+        int page,
+        int pageSize,
+        CancellationToken ct = default);
     Task<int> GetUnreadCountAsync(int recipientPersonaId, CancellationToken ct = default);
     Task<bool> MarkReadAsync(int notificationId, int actorPersonaId, CancellationToken ct = default);
     Task<int> MarkAllReadAsync(int actorPersonaId, CancellationToken ct = default);
+}
+
+public enum ReadFilter
+{
+    All,
+    Unread,
+    Read,
 }

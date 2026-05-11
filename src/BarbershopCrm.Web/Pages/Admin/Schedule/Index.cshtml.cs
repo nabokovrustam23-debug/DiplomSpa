@@ -18,31 +18,45 @@ public class IndexModel : AppPageModel
         _db = db;
     }
 
+    [BindProperty(SupportsGet = true)] public int? BranchId { get; set; }
+    [BindProperty(SupportsGet = true)] public string? Date { get; set; }
+
     public IList<Branch> Branches { get; private set; } = Array.Empty<Branch>();
-    public IList<Master> Masters { get; private set; } = Array.Empty<Master>();
-    public Dictionary<(int MasterId, DateOnly Date), List<WorkSchedule>> Grid { get; private set; } = new();
+    public Branch? CurrentBranch { get; private set; }
+    public DateOnly DateValue { get; private set; }
 
-    [BindProperty(SupportsGet = true)]
-    public int? BranchId { get; set; }
+    public List<Master> Masters { get; private set; } = new();
+    public TimeOnly TimelineStart { get; private set; }
+    public TimeOnly TimelineEnd { get; private set; }
+    public List<TimelineHour> TimelineHours { get; private set; } = new();
+    public Dictionary<int, List<TimelineEntry>> EntriesByMaster { get; private set; } = new();
 
-    [BindProperty(SupportsGet = true)]
-    public string? WeekStart { get; set; } // YYYY-MM-DD
+    public sealed record TimelineHour(TimeOnly Time, int RowIndex);
 
-    public DateOnly StartDate { get; private set; }
-    public DateOnly[] WeekDays { get; private set; } = Array.Empty<DateOnly>();
+    public sealed record TimelineEntry(
+        TimelineEntryKind Kind,
+        TimeOnly StartTime,
+        TimeOnly EndTime,
+        int RowStart,
+        int RowSpan,
+        Booking? Booking,
+        string? Label);
 
-    public async Task OnGetAsync(CancellationToken ct)
+    public enum TimelineEntryKind { Booking, Lunch, DayOff, Vacation, SickLeave }
+
+    private const int MinutesPerRow = 15;
+    public int TotalRows => Math.Max(1, MinutesBetween(TimelineStart, TimelineEnd) / MinutesPerRow);
+
+    public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
-        StartDate = ParseStart(WeekStart);
-        WeekDays = Enumerable.Range(0, 7).Select(i => StartDate.AddDays(i)).ToArray();
+        DateValue = !string.IsNullOrWhiteSpace(Date) && DateOnly.TryParse(Date, out var d)
+            ? d : DateOnly.FromDateTime(DateTime.Today);
 
-        Branches = await _db.Branches
+        Branches = await _db.Branches.AsNoTracking()
             .Where(b => b.IsActive)
             .OrderBy(b => b.Name)
-            .AsNoTracking()
             .ToListAsync(ct);
 
-        // Admin sees only own branch.
         if (Current?.RoleCode == RoleCode.Admin && Current.BranchId.HasValue)
         {
             BranchId = Current.BranchId.Value;
@@ -52,32 +66,142 @@ public class IndexModel : AppPageModel
             BranchId = Branches[0].BranchId;
         }
 
-        if (BranchId is null) return;
+        if (BranchId is null) return Page();
 
-        Masters = await _db.Masters
+        CurrentBranch = Branches.FirstOrDefault(b => b.BranchId == BranchId.Value);
+
+        Masters = await _db.Masters.AsNoTracking()
             .Include(m => m.Persona)
             .Where(m => m.IsActive && m.BranchId == BranchId.Value)
             .OrderBy(m => m.Persona.LastName)
-            .AsNoTracking()
             .ToListAsync(ct);
 
-        var ids = Masters.Select(m => m.MasterId).ToList();
-        var endDate = StartDate.AddDays(7);
-        var schedules = await _db.WorkSchedules
-            .Where(w => ids.Contains(w.MasterId) && w.WorkDate >= StartDate && w.WorkDate < endDate)
+        if (Masters.Count == 0) return Page();
+
+        var masterIds = Masters.Select(m => m.MasterId).ToList();
+        var dayStart = new DateTime(DateValue.Year, DateValue.Month, DateValue.Day);
+        var dayEnd = dayStart.AddDays(1);
+
+        var bookings = await _db.Bookings.AsNoTracking()
+            .Where(b => masterIds.Contains(b.MasterId)
+                        && b.StartDateTime >= dayStart && b.StartDateTime < dayEnd
+                        && b.Status != BookingStatus.Cancelled)
+            .Include(b => b.Service)
+            .Include(b => b.Client).ThenInclude(c => c.Persona)
+            .OrderBy(b => b.StartDateTime)
+            .ToListAsync(ct);
+
+        var schedule = await _db.WorkSchedules.AsNoTracking()
+            .Where(w => masterIds.Contains(w.MasterId) && w.WorkDate == DateValue)
             .OrderBy(w => w.StartTime)
-            .AsNoTracking()
             .ToListAsync(ct);
 
-        Grid = schedules
-            .GroupBy(s => (s.MasterId, s.WorkDate))
-            .ToDictionary(g => g.Key, g => g.ToList());
+        BuildTimeline(bookings, schedule);
+        return Page();
     }
 
-    public string FormatRanges((int MasterId, DateOnly Date) key)
+    private void BuildTimeline(List<Booking> bookings, List<WorkSchedule> schedule)
     {
-        if (!Grid.TryGetValue(key, out var list) || list.Count == 0) return "—";
-        return string.Join(", ", list.Select(s => $"{Label(s.ScheduleType)} {s.StartTime:HH\\:mm}–{s.EndTime:HH\\:mm}"));
+        var workRanges = schedule.Where(w => string.Equals(w.ScheduleType, ScheduleType.Work, StringComparison.Ordinal)).ToList();
+        if (workRanges.Count > 0)
+        {
+            TimelineStart = workRanges.Min(w => w.StartTime);
+            TimelineEnd = workRanges.Max(w => w.EndTime);
+        }
+        else
+        {
+            TimelineStart = new TimeOnly(10, 0);
+            TimelineEnd = new TimeOnly(20, 0);
+        }
+
+        foreach (var b in bookings)
+        {
+            var s = TimeOnly.FromDateTime(b.StartDateTime);
+            var e = TimeOnly.FromDateTime(b.StartDateTime.AddMinutes(b.DurationMinutes));
+            if (s < TimelineStart) TimelineStart = s;
+            if (e > TimelineEnd) TimelineEnd = e;
+        }
+
+        TimelineStart = new TimeOnly(TimelineStart.Hour, 0);
+        if (TimelineEnd.Minute > 0) TimelineEnd = new TimeOnly(Math.Min(23, TimelineEnd.Hour + 1), 0);
+
+        TimelineHours = new List<TimelineHour>();
+        for (var h = TimelineStart; h < TimelineEnd; h = h.AddHours(1))
+        {
+            var rowIndex = MinutesBetween(TimelineStart, h) / MinutesPerRow;
+            TimelineHours.Add(new TimelineHour(h, rowIndex + 1));
+        }
+
+        EntriesByMaster = Masters.ToDictionary(m => m.MasterId, _ => new List<TimelineEntry>());
+
+        foreach (var b in bookings)
+        {
+            if (!EntriesByMaster.ContainsKey(b.MasterId)) continue;
+            var s = TimeOnly.FromDateTime(b.StartDateTime);
+            var e = TimeOnly.FromDateTime(b.StartDateTime.AddMinutes(b.DurationMinutes));
+            EntriesByMaster[b.MasterId].Add(new TimelineEntry(
+                TimelineEntryKind.Booking,
+                s, e,
+                RowFor(s), Math.Max(1, MinutesBetween(s, e) / MinutesPerRow),
+                b, null));
+        }
+
+        foreach (var w in schedule)
+        {
+            if (!EntriesByMaster.ContainsKey(w.MasterId)) continue;
+            TimelineEntryKind? kind = w.ScheduleType switch
+            {
+                "Lunch"     => TimelineEntryKind.Lunch,
+                "DayOff"    => TimelineEntryKind.DayOff,
+                "Vacation"  => TimelineEntryKind.Vacation,
+                "SickLeave" => TimelineEntryKind.SickLeave,
+                _ => null,
+            };
+            if (kind is null) continue;
+
+            var label = kind switch
+            {
+                TimelineEntryKind.Lunch     => "Перерыв",
+                TimelineEntryKind.DayOff    => "Выходной",
+                TimelineEntryKind.Vacation  => "Отпуск",
+                TimelineEntryKind.SickLeave => "Больничный",
+                _ => string.Empty,
+            };
+            EntriesByMaster[w.MasterId].Add(new TimelineEntry(
+                kind.Value,
+                w.StartTime, w.EndTime,
+                RowFor(w.StartTime),
+                Math.Max(1, MinutesBetween(w.StartTime, w.EndTime) / MinutesPerRow),
+                null, label));
+        }
+
+        foreach (var k in EntriesByMaster.Keys.ToList())
+            EntriesByMaster[k] = EntriesByMaster[k].OrderBy(e => e.StartTime).ToList();
+    }
+
+    private int RowFor(TimeOnly t) => 1 + Math.Max(0, MinutesBetween(TimelineStart, t) / MinutesPerRow);
+
+    private static int MinutesBetween(TimeOnly a, TimeOnly b) => (int)(b - a).TotalMinutes;
+
+    public static string FormatRussianDate(DateOnly d)
+    {
+        var culture = System.Globalization.CultureInfo.GetCultureInfo("ru-RU");
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var prefix = d == today ? "Сегодня" :
+                     d == today.AddDays(1) ? "Завтра" :
+                     d == today.AddDays(-1) ? "Вчера" :
+                     culture.DateTimeFormat.GetDayName(d.DayOfWeek);
+        prefix = char.ToUpperInvariant(prefix[0]) + prefix[1..];
+        return $"{prefix}, {d.ToString("d MMMM yyyy", culture)}";
+    }
+
+    public static string FormatDuration(int totalMinutes)
+    {
+        var h = totalMinutes / 60;
+        var m = totalMinutes % 60;
+        if (h == 0) return $"{m} мин";
+        if (m == 0) return $"{h} ч";
+        return $"{h} ч {m} мин";
     }
 
     public static string Label(string type) => type switch
@@ -89,19 +213,4 @@ public class IndexModel : AppPageModel
         ScheduleType.SickLeave => "Больничный",
         _ => type,
     };
-
-    private static DateOnly ParseStart(string? raw)
-    {
-        if (DateOnly.TryParse(raw, out var d))
-            return StartOfWeek(d);
-        return StartOfWeek(DateOnly.FromDateTime(DateTime.Today));
-    }
-
-    private static DateOnly StartOfWeek(DateOnly d)
-    {
-        // Monday-start week.
-        var dow = (int)d.DayOfWeek;
-        var diff = (dow == 0 ? 7 : dow) - 1;
-        return d.AddDays(-diff);
-    }
 }

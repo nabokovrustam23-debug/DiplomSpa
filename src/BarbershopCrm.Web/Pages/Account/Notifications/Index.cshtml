@@ -2,28 +2,59 @@
 @model BarbershopCrm.Web.Pages.Account.Notifications.IndexModel
 @{
     ViewData["Title"] = "Мои уведомления";
+    var filter = Model.Filter?.ToLowerInvariant() ?? "all";
+    var sort = string.Equals(Model.Sort, "oldest", StringComparison.OrdinalIgnoreCase) ? "oldest" : "newest";
+    var pageSize = BarbershopCrm.Web.Pages.Account.Notifications.IndexModel.DefaultPageSize;
+    var rangeStart = Model.TotalCount == 0 ? 0 : ((Model.CurrentPage - 1) * pageSize) + 1;
+    var rangeEnd = Math.Min(Model.TotalCount, Model.CurrentPage * pageSize);
 }
 
 <section class="card">
-    <h1>Мои уведомления</h1>
-    <p class="muted">
-        Здесь собраны in-app уведомления: подтверждения и отмены записей, напоминания, сервисные сообщения.
+    <header class="notif-header">
+        <div>
+            <h1>Мои уведомления</h1>
+            <p class="muted">
+                Подтверждения и отмены записей, напоминания, сервисные сообщения.
+                @if (Model.UnreadCount > 0)
+                {
+                    <strong>Непрочитанных: @Model.UnreadCount</strong>
+                }
+            </p>
+        </div>
         @if (Model.UnreadCount > 0)
         {
-            <strong>Непрочитанных: @Model.UnreadCount</strong>
+            <form method="post" asp-page-handler="ReadAll" class="notif-header__actions">
+                <input type="hidden" name="Filter" value="@Model.Filter" />
+                <input type="hidden" name="Sort" value="@Model.Sort" />
+                <input type="hidden" name="page" value="@Model.CurrentPage" />
+                <button type="submit" class="btn btn--outline btn--small">Отметить все прочитанными</button>
+            </form>
         }
-    </p>
+    </header>
 
-    @if (Model.UnreadCount > 0)
-    {
-        <form method="post" asp-page-handler="ReadAll" class="form-actions">
-            <button type="submit" class="btn btn--outline">Отметить все прочитанными</button>
-        </form>
-    }
+    <form method="get" class="notif-toolbar" role="search">
+        <div class="notif-toolbar__group" role="tablist" aria-label="Фильтр">
+            <a class="chip @(filter == "all" ? "chip--active" : "")"
+               asp-route-filter="" asp-route-sort="@Model.Sort">Все</a>
+            <a class="chip @(filter == "unread" ? "chip--active" : "")"
+               asp-route-filter="unread" asp-route-sort="@Model.Sort">Непрочитанные</a>
+            <a class="chip @(filter == "read" ? "chip--active" : "")"
+               asp-route-filter="read" asp-route-sort="@Model.Sort">Прочитанные</a>
+        </div>
+        <div class="notif-toolbar__group">
+            <label for="notif-sort" class="visually-hidden">Сортировка</label>
+            <select id="notif-sort" name="sort" class="input" onchange="this.form.submit()">
+                <option value="newest" selected="@(sort == "newest")">Сначала новые</option>
+                <option value="oldest" selected="@(sort == "oldest")">Сначала старые</option>
+            </select>
+            <input type="hidden" name="filter" value="@Model.Filter" />
+            <noscript><button class="btn btn--outline btn--small" type="submit">Применить</button></noscript>
+        </div>
+    </form>
 
     @if (!Model.Items.Any())
     {
-        <p class="muted">Уведомлений пока нет.</p>
+        <p class="muted">Уведомлений по выбранному фильтру нет.</p>
     }
     else
     {
@@ -33,18 +64,56 @@
                 var unread = n.ReadAt is null;
                 <li class="notif @(unread ? "notif--unread" : "")">
                     <div class="notif__head">
-                        <span class="notif__subject">@n.Subject</span>
+                        <span class="notif__subject">
+                            @if (unread)
+                            {
+                                <span class="notif__dot" aria-label="Не прочитано" title="Не прочитано"></span>
+                            }
+                            @n.Subject
+                        </span>
                         <span class="notif__date muted">@n.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
                     </div>
                     <pre class="notif__body">@n.Body</pre>
                     @if (unread)
                     {
-                        <form method="post" asp-page-handler="Read" asp-route-id="@n.NotificationId" class="form-actions">
-                            <button type="submit" class="btn btn--ghost">Прочитано</button>
+                        <form method="post" asp-page-handler="Read" asp-route-id="@n.NotificationId" class="notif__actions">
+                            <input type="hidden" name="Filter" value="@Model.Filter" />
+                            <input type="hidden" name="Sort" value="@Model.Sort" />
+                            <input type="hidden" name="page" value="@Model.CurrentPage" />
+                            <button type="submit" class="btn btn--ghost btn--small">Прочитано</button>
                         </form>
                     }
                 </li>
             }
         </ul>
+
+        <nav class="pager" aria-label="Постраничная навигация">
+            <span class="pager__info muted">@rangeStart–@rangeEnd из @Model.TotalCount</span>
+            <div class="pager__controls">
+                @if (Model.CurrentPage > 1)
+                {
+                    <a class="btn btn--outline btn--small"
+                       asp-route-filter="@Model.Filter"
+                       asp-route-sort="@Model.Sort"
+                       asp-route-page="@(Model.CurrentPage - 1)">← Назад</a>
+                }
+                else
+                {
+                    <span class="btn btn--outline btn--small is-disabled" aria-disabled="true">← Назад</span>
+                }
+                <span class="pager__page">Страница @Model.CurrentPage / @Model.TotalPages</span>
+                @if (Model.CurrentPage < Model.TotalPages)
+                {
+                    <a class="btn btn--outline btn--small"
+                       asp-route-filter="@Model.Filter"
+                       asp-route-sort="@Model.Sort"
+                       asp-route-page="@(Model.CurrentPage + 1)">Дальше →</a>
+                }
+                else
+                {
+                    <span class="btn btn--outline btn--small is-disabled" aria-disabled="true">Дальше →</span>
+                }
+            </div>
+        </nav>
     }
 </section>

@@ -36,15 +36,33 @@ public class NewModel : AppPageModel
 
     public sealed class InputModel
     {
-        [Required] public int BranchId { get; set; }
-        [Required] public int ServiceId { get; set; }
-        [Required] public int MasterId { get; set; }
-        [Required] public DateTime StartDateTime { get; set; } = DateTime.Now.AddHours(1);
-        [Required, StringLength(80)] public string LastName { get; set; } = string.Empty;
-        [Required, StringLength(80)] public string FirstName { get; set; } = string.Empty;
-        [Required, StringLength(20)] public string Phone { get; set; } = string.Empty;
-        [EmailAddress, StringLength(120)] public string? Email { get; set; }
+        [Required(ErrorMessage = "Выберите филиал.")]
+        public int? BranchId { get; set; }
+
+        [Required(ErrorMessage = "Выберите услугу.")]
+        public int? ServiceId { get; set; }
+
+        [Required(ErrorMessage = "Выберите мастера.")]
+        public int? MasterId { get; set; }
+
+        [Required(ErrorMessage = "Укажите дату и время.")]
+        public DateTime? StartDateTime { get; set; } = RoundToMinute(DateTime.Now.AddHours(1));
+
+        [Required(ErrorMessage = "Укажите фамилию."), StringLength(80, ErrorMessage = "Фамилия слишком длинная.")]
+        public string LastName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Укажите имя."), StringLength(80, ErrorMessage = "Имя слишком длинное.")]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Укажите телефон."), StringLength(20, ErrorMessage = "Слишком длинный номер.")]
+        public string Phone { get; set; } = string.Empty;
+
+        [EmailAddress(ErrorMessage = "Некорректный email."), StringLength(120)]
+        public string? Email { get; set; }
     }
+
+    private static DateTime RoundToMinute(DateTime dt) =>
+        new(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, 0, dt.Kind);
 
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
@@ -125,12 +143,11 @@ public class NewModel : AppPageModel
             await _db.SaveChangesAsync(ct);
         }
 
-        var startUtc = DateTime.SpecifyKind(Input.StartDateTime, DateTimeKind.Local).ToUniversalTime();
-        // Project stores DateTime as local (no timezone tracking). Use the value as-is.
-        var startDt = Input.StartDateTime;
+        // Project stores DateTime as local (no timezone tracking). Use the value as-is, rounded to minute.
+        var startDt = RoundToMinute(Input.StartDateTime!.Value);
 
         var result = await _bookings.CreateAsync(new CreateBookingCommand(
-            client.ClientId, Input.BranchId, Input.ServiceId, Input.MasterId, startDt, BookingSource.Admin), ct);
+            client.ClientId, Input.BranchId!.Value, Input.ServiceId!.Value, Input.MasterId!.Value, startDt, BookingSource.Admin), ct);
 
         if (!result.Success)
         {
@@ -163,7 +180,7 @@ public class NewModel : AppPageModel
         if (Current!.RoleCode == RoleCode.Admin && Current.BranchId.HasValue)
         {
             branchesQ = branchesQ.Where(b => b.BranchId == Current.BranchId.Value);
-            if (Input.BranchId == 0) Input.BranchId = Current.BranchId.Value;
+            if (!Input.BranchId.HasValue || Input.BranchId == 0) Input.BranchId = Current.BranchId.Value;
         }
 
         Branches = await branchesQ.OrderBy(b => b.Name)
@@ -176,11 +193,13 @@ public class NewModel : AppPageModel
             .Select(s => new SelectListItem($"{s.Name} ({s.DurationMinutes} мин · {s.Price:0} ₽)", s.ServiceId.ToString()))
             .ToListAsync(ct);
 
-        if (Input.BranchId > 0)
+        if (Input.BranchId.HasValue && Input.BranchId.Value > 0)
         {
+            var bid = Input.BranchId.Value;
+            var sid = Input.ServiceId ?? 0;
             Masters = await _db.Masters.AsNoTracking()
-                .Where(m => m.IsActive && m.BranchId == Input.BranchId
-                    && (Input.ServiceId == 0 || m.MasterServices.Any(ms => ms.ServiceId == Input.ServiceId)))
+                .Where(m => m.IsActive && m.BranchId == bid
+                    && (sid == 0 || m.MasterServices.Any(ms => ms.ServiceId == sid)))
                 .Include(m => m.Persona)
                 .OrderBy(m => m.Persona.LastName)
                 .Select(m => new SelectListItem(m.Persona.LastName + " " + m.Persona.FirstName, m.MasterId.ToString()))

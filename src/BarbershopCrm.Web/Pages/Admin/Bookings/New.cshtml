@@ -45,8 +45,9 @@
             <span asp-validation-for="Input.MasterId" class="field-validation-error"></span>
         </div>
         <div class="form-group">
-            <label asp-for="Input.StartDateTime">Дата и время</label>
-            <input asp-for="Input.StartDateTime" type="datetime-local" class="input" step="900" />
+            <label for="Input_StartDateTime">Дата и время</label>
+            <input id="Input_StartDateTime" name="Input.StartDateTime" type="datetime-local" class="input" step="900"
+                   value="@(Model.Input.StartDateTime?.ToString("yyyy-MM-ddTHH:mm"))" required />
             <span asp-validation-for="Input.StartDateTime" class="field-validation-error"></span>
             <small class="faint">Шаг 15 минут. Время должно укладываться в смену мастера.</small>
         </div>

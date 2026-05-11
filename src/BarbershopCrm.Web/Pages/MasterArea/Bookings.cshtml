@@ -2,79 +2,150 @@
 @using BarbershopCrm.Domain.Enums
 @model BarbershopCrm.Web.Pages.MasterArea.BookingsModel
 @{
-    ViewData["Title"] = "Мои записи на день";
+    ViewData["Title"] = "Моё расписание";
+    var prevDay = Model.DateValue.AddDays(-1).ToString("yyyy-MM-dd");
+    var nextDay = Model.DateValue.AddDays(1).ToString("yyyy-MM-dd");
+    var today = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd");
 }
 
-<section class="card">
-    <h1>Мои записи</h1>
-    <p class="muted">Подтверждайте, завершайте или отмечайте «не пришёл». При завершении создаётся визит с суммой и заметками.</p>
+<section class="card timeline-card">
+    <header class="timeline-header">
+        <div class="timeline-header__title">
+            <h1 class="timeline-title">Моё расписание</h1>
+            <div class="timeline-meta">
+                @if (Model.Branch is not null)
+                {
+                    <span class="timeline-meta__chip">
+                        <span class="timeline-meta__dot" aria-hidden="true"></span>
+                        Филиал @Model.Branch.Name
+                    </span>
+                    <span class="timeline-meta__sep">·</span>
+                }
+                <span class="timeline-meta__date">@BarbershopCrm.Web.Pages.MasterArea.BookingsModel.FormatRussianDate(Model.DateValue)</span>
+            </div>
+        </div>
+
+        <form method="get" class="timeline-toolbar">
+            <a class="btn btn--outline btn--small" asp-page="/MasterArea/Bookings" asp-route-date="@prevDay" aria-label="Предыдущий день">←</a>
+            <a class="btn btn--outline btn--small" asp-page="/MasterArea/Bookings" asp-route-date="@today">Сегодня</a>
+            <a class="btn btn--outline btn--small" asp-page="/MasterArea/Bookings" asp-route-date="@nextDay" aria-label="Следующий день">→</a>
+            <label class="timeline-datepicker">
+                <span class="visually-hidden">Дата</span>
+                <input type="date" id="Date" name="Date" class="input" value="@Model.DateValue.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+            </label>
+        </form>
+    </header>
 
     <div asp-validation-summary="All" class="alert alert--error"></div>
 
-    <form method="get" class="form-row">
-        <div class="form-group">
-            <label for="Date">День</label>
-            <input type="date" id="Date" name="Date" class="input" value="@Model.DateValue.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
-        </div>
-        <div class="form-group">
-            <a class="btn btn--outline" asp-page="/MasterArea/Schedule">Расписание</a>
-        </div>
-    </form>
-
-    @if (!Model.Bookings.Any())
+    @if (Model.Self is null)
     {
-        <p class="muted">На @Model.DateValue.ToString("dd.MM.yyyy") записей нет.</p>
+        <p class="muted">Профиль мастера не настроен. Обратитесь к администратору.</p>
+    }
+    else if (Model.TimelineHours.Count == 0)
+    {
+        <p class="muted">На выбранный день расписание не задано.</p>
     }
     else
     {
-        <table class="table">
-            <thead>
-                <tr><th scope="col">Время</th><th scope="col">Клиент</th><th scope="col">Услуга</th><th scope="col">Статус</th><th scope="col">Действия</th></tr>
-            </thead>
-            <tbody>
-            @foreach (var b in Model.Bookings)
+        <div class="timeline" style="--timeline-rows: @Model.TotalRows;">
+            <div class="timeline__head" style="grid-row: 1; grid-column: 1;">Время</div>
+            <div class="timeline__head" style="grid-row: 1; grid-column: 2;">
+                <span class="timeline__master-avatar" aria-hidden="true">@(Model.Self.Persona.LastName.Length > 0 ? Model.Self.Persona.LastName[0].ToString() : "?")</span>
+                <span class="timeline__master-name">@Model.Self.Persona.ShortName</span>
+            </div>
+
+            @foreach (var h in Model.TimelineHours)
             {
-                <tr>
-                    <td>@b.StartDateTime.ToString("HH:mm") – @b.StartDateTime.AddMinutes(b.DurationMinutes).ToString("HH:mm")</td>
-                    <td>@b.Client.Persona.LastName @b.Client.Persona.FirstName<br/><span class="muted">@b.Client.Persona.Phone</span></td>
-                    <td>@b.Service.Name (@b.PriceSnapshot.ToString("0") ₽)</td>
-                    <td><span class="badge badge--@b.Status.ToLowerInvariant()">@b.Status</span></td>
-                    <td class="booking-actions">
-                        @if (b.Status == BookingStatus.Created)
-                        {
-                            <form method="post" asp-page-handler="Confirm" asp-route-id="@b.BookingId" data-busy>
-                                <button class="btn btn--primary btn--small" type="submit">Подтвердить</button>
-                            </form>
-                        }
-                        @if (b.Status == BookingStatus.Created || b.Status == BookingStatus.Confirmed)
-                        {
-                            <form method="post" asp-page-handler="NoShow" asp-route-id="@b.BookingId" data-busy onsubmit="return confirm('Отметить, что клиент не пришёл?')">
-                                <button class="btn btn--outline btn--small" type="submit">Не пришёл</button>
-                            </form>
-                            <details class="booking-actions__complete">
-                                <summary class="btn btn--small">Завершить</summary>
-                                <form method="post" asp-page-handler="Complete" data-busy class="form-grid">
-                                    <input type="hidden" name="Complete.BookingId" value="@b.BookingId" />
-                                    <div class="form-group">
-                                        <label for="totalAmount-@b.BookingId">Сумма ₽</label>
-                                        <input id="totalAmount-@b.BookingId" name="Complete.TotalAmount" type="number" min="0" step="50" required class="input" value="@b.PriceSnapshot.ToString("0")" />
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="masterNotes-@b.BookingId">Заметки</label>
-                                        <textarea id="masterNotes-@b.BookingId" name="Complete.MasterNotes" maxlength="500" class="input"></textarea>
-                                    </div>
-                                    <div class="form-actions">
-                                        <button class="btn btn--primary btn--small" type="submit">Сохранить визит</button>
-                                    </div>
-                                </form>
-                            </details>
-                        }
-                    </td>
-                </tr>
+                <div class="timeline__hour" style="grid-row: @(h.RowIndex + 1) / span 4; grid-column: 1;">
+                    <span class="timeline__hour-label">@h.Time.ToString("HH:mm")</span>
+                </div>
+                <div class="timeline__cell" style="grid-row: @(h.RowIndex + 1) / span 4; grid-column: 2;"></div>
             }
-            </tbody>
-        </table>
+
+            @foreach (var e in Model.TimelineEntries)
+            {
+                if (e.Kind == BarbershopCrm.Web.Pages.MasterArea.BookingsModel.TimelineEntryKind.Booking && e.Booking is not null)
+                {
+                    var b = e.Booking;
+                    var statusCode = b.Status;
+                    var statusLabel = StatusLabels.BookingStatus(statusCode);
+                    <article class="timeline-entry timeline-entry--booking timeline-entry--@statusCode.ToLowerInvariant()"
+                             style="grid-row: @(e.RowStart + 1) / span @e.RowSpan; grid-column: 2;">
+                        <header class="timeline-entry__top">
+                            <div class="timeline-entry__client">@b.Client.Persona.ShortName</div>
+                            <span class="badge badge--@statusCode.ToLowerInvariant()" title="@statusLabel">@statusLabel</span>
+                        </header>
+                        <div class="timeline-entry__service">
+                            <span aria-hidden="true">✂</span>
+                            <span>@b.Service.Name</span>
+                        </div>
+                        <div class="timeline-entry__meta">
+                            @b.StartDateTime.ToString("HH:mm") – @b.StartDateTime.AddMinutes(b.DurationMinutes).ToString("HH:mm")
+                            · @BarbershopCrm.Web.Pages.MasterArea.BookingsModel.FormatDuration(b.DurationMinutes)
+                            · @b.PriceSnapshot.ToString("0") ₽
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(b.Client.Persona.Phone))
+                        {
+                            <div class="timeline-entry__phone tnum">@b.Client.Persona.Phone</div>
+                        }
+                        <div class="timeline-entry__actions booking-actions">
+                            @if (b.Status == BookingStatus.Created)
+                            {
+                                <form method="post" asp-page-handler="Confirm" asp-route-id="@b.BookingId" data-busy>
+                                    <button class="btn btn--primary btn--small" type="submit">Подтвердить</button>
+                                </form>
+                            }
+                            @if (b.Status == BookingStatus.Created || b.Status == BookingStatus.Confirmed)
+                            {
+                                <form method="post" asp-page-handler="NoShow" asp-route-id="@b.BookingId" data-busy onsubmit="return confirm('Отметить, что клиент не пришёл?')">
+                                    <button class="btn btn--outline btn--small" type="submit">Не пришёл</button>
+                                </form>
+                                <details class="booking-actions__complete">
+                                    <summary class="btn btn--small">Завершить</summary>
+                                    <form method="post" asp-page-handler="Complete" data-busy class="form-grid">
+                                        <input type="hidden" name="Complete.BookingId" value="@b.BookingId" />
+                                        <div class="form-group">
+                                            <label for="totalAmount-@b.BookingId">Сумма ₽</label>
+                                            <input id="totalAmount-@b.BookingId" name="Complete.TotalAmount" type="number" min="0" step="50" required class="input" value="@b.PriceSnapshot.ToString("0")" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="masterNotes-@b.BookingId">Заметки</label>
+                                            <textarea id="masterNotes-@b.BookingId" name="Complete.MasterNotes" maxlength="500" class="input"></textarea>
+                                        </div>
+                                        <div class="form-actions">
+                                            <button class="btn btn--primary btn--small" type="submit">Сохранить визит</button>
+                                        </div>
+                                    </form>
+                                </details>
+                            }
+                        </div>
+                    </article>
+                }
+                else
+                {
+                    var modifier = e.Kind.ToString().ToLowerInvariant();
+                    <div class="timeline-entry timeline-entry--break timeline-entry--@modifier"
+                         style="grid-row: @(e.RowStart + 1) / span @e.RowSpan; grid-column: 2;"
+                         aria-label="@e.Label">
+                        <span class="timeline-entry__break-label">@e.Label</span>
+                        <span class="timeline-entry__break-time">@e.StartTime.ToString("HH:mm") – @e.EndTime.ToString("HH:mm")</span>
+                    </div>
+                }
+            }
+        </div>
+
+        <footer class="timeline-legend muted">
+            <span><span class="timeline-legend__dot timeline-legend__dot--booking"></span>Запись</span>
+            <span><span class="timeline-legend__dot timeline-legend__dot--lunch"></span>Перерыв</span>
+            <span><span class="timeline-legend__dot timeline-legend__dot--vacation"></span>Отпуск</span>
+            <span><span class="timeline-legend__dot timeline-legend__dot--sickleave"></span>Больничный</span>
+        </footer>
     }
+
+    <div class="form-actions">
+        <a asp-page="/MasterArea/RequestLeave" class="btn btn--outline">Запросить отпуск или больничный</a>
+    </div>
 </section>
 
 @section Scripts {

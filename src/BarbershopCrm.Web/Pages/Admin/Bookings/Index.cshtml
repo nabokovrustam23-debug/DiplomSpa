@@ -42,7 +42,7 @@
                 <option value="">Все</option>
                 @foreach (var s in Model.StatusOptions)
                 {
-                    <option value="@s" selected="@(Model.Status == s)">@s</option>
+                    <option value="@s" selected="@(Model.Status == s)">@StatusLabels.BookingStatus(s)</option>
                 }
             </select>
         </div>
@@ -68,11 +68,11 @@
                 <tr>
                     <td>@b.StartDateTime.ToString("dd.MM HH:mm")</td>
                     <td>@b.Branch.Name</td>
-                    <td>@b.Client.Persona.LastName @b.Client.Persona.FirstName<br/><span class="muted">@b.Client.Persona.Phone</span></td>
-                    <td>@b.Master.Persona.LastName @b.Master.Persona.FirstName</td>
+                    <td>@b.Client.Persona.ShortName<br/><span class="muted tnum">@b.Client.Persona.Phone</span></td>
+                    <td>@b.Master.Persona.ShortName</td>
                     <td>@b.Service.Name</td>
-                    <td><span class="badge badge--@b.Status.ToLowerInvariant()">@b.Status</span></td>
-                    <td><span class="muted">@b.Source</span></td>
+                    <td><span class="badge badge--@b.Status.ToLowerInvariant()">@StatusLabels.BookingStatus(b.Status)</span></td>
+                    <td><span class="muted">@StatusLabels.BookingSource(b.Source)</span></td>
                     <td>
                         @if (b.Status == BookingStatus.Created || b.Status == BookingStatus.Confirmed)
                         {

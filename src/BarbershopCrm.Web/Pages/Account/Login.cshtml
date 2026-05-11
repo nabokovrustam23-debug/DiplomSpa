@@ -2,63 +2,97 @@
 @model BarbershopCrm.Web.Pages.Account.LoginModel
 @{
     ViewData["Title"] = "Вход в кабинет";
+    Layout = "_AuthLayout";
 }
 
-<section class="auth-shell">
-    <div class="auth-card card">
-        <h1>Вход в кабинет</h1>
-        <p class="muted">Введите email и пароль, привязанные к аккаунту в «Тихом часе».</p>
-
-        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-        {
-            <div class="flash flash--error">@Model.ErrorMessage</div>
-        }
-
-        <form method="post" novalidate>
-            <input asp-for="ReturnUrl" type="hidden" />
-
-            <div class="field">
-                <label asp-for="Input.Email">Email</label>
-                <input asp-for="Input.Email" type="email" autocomplete="username" autofocus required />
-                <span asp-validation-for="Input.Email" class="field-error"></span>
+<section class="auth-split">
+    <aside class="auth-split__hero" aria-hidden="true">
+        <div class="auth-split__hero-overlay">
+            <a asp-page="/Index" class="auth-split__brand">
+                <span class="auth-split__brand-mark">Тихий час</span>
+                <span class="auth-split__brand-tag">Барбершоп · Краснодар</span>
+            </a>
+            <div class="auth-split__quote">
+                <p>«Расписание, мастера и онлайн-запись в одной системе. Управляйте сетью спокойно — это и есть тихий час.»</p>
             </div>
-
-            <div class="field">
-                <label asp-for="Input.Password">Пароль</label>
-                <input asp-for="Input.Password" type="password" autocomplete="current-password" required />
-                <span asp-validation-for="Input.Password" class="field-error"></span>
-            </div>
-
-            <div class="auth-actions">
-                <button type="submit" class="btn btn--primary">Войти</button>
-                <a asp-page="/Account/ForgotPassword" class="btn-link">Забыли пароль?</a>
-            </div>
-        </form>
-
-        <div class="auth-secondary">
-            Нет аккаунта?
-            <a asp-page="/Account/Register">Зарегистрироваться</a>
+            <ul class="auth-split__bullets">
+                <li>Онлайн-запись клиентов с защитой от двойного бронирования</li>
+                <li>Личный кабинет мастера: смены, перерывы, отпуска</li>
+                <li>Журнал визитов и аналитика по сети</li>
+            </ul>
         </div>
+    </aside>
 
-        @if (Model.ShowQuickLogin)
-        {
-            <div class="quick-login">
-                <div class="quick-login__title">Быстрый вход (только для разработки)</div>
-                <p class="faint quick-login__hint">Тестовые учётки с паролем <code>Test12345!</code> для проверки модулей.</p>
+    <div class="auth-split__panel">
+        <div class="auth-split__panel-inner">
+            <header class="auth-split__header">
+                <a asp-page="/Index" class="auth-split__back">← На главную</a>
+                <h1>С возвращением</h1>
+                <p class="muted">Войдите в кабинет «Тихого часа», чтобы продолжить.</p>
+            </header>
 
-                @foreach (var acc in Model.QuickAccounts)
-                {
-                    <form method="post" asp-page-handler="Quick" class="quick-login__row">
-                        <input type="hidden" name="email" value="@acc.Email" />
-                        <input asp-for="ReturnUrl" type="hidden" />
-                        <button type="submit" class="btn btn--outline btn--sm quick-login__btn">
-                            <span class="quick-login__name">@acc.Title</span>
-                            <span class="quick-login__sub">@acc.Subtitle</span>
-                            <span class="quick-login__email">@acc.Email</span>
-                        </button>
-                    </form>
-                }
-            </div>
-        }
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="flash flash--error" role="alert">@Model.ErrorMessage</div>
+            }
+
+            <form method="post" novalidate class="auth-form">
+                <input asp-for="ReturnUrl" type="hidden" />
+
+                <div class="field auth-field">
+                    <label asp-for="Input.Email" class="auth-field__label">Email</label>
+                    <div class="auth-field__control">
+                        <span class="auth-field__icon" aria-hidden="true">@@</span>
+                        <input asp-for="Input.Email" type="email" autocomplete="username" autofocus required placeholder="ivan@example.com" />
+                    </div>
+                    <span asp-validation-for="Input.Email" class="field-error"></span>
+                </div>
+
+                <div class="field auth-field">
+                    <label asp-for="Input.Password" class="auth-field__label">
+                        Пароль
+                        <a asp-page="/Account/ForgotPassword" class="auth-field__hint">Забыли пароль?</a>
+                    </label>
+                    <div class="auth-field__control">
+                        <span class="auth-field__icon" aria-hidden="true">●</span>
+                        <input asp-for="Input.Password" type="password" autocomplete="current-password" required placeholder="••••••••" />
+                    </div>
+                    <span asp-validation-for="Input.Password" class="field-error"></span>
+                </div>
+
+                <button type="submit" class="btn btn--primary auth-form__submit">Войти в кабинет</button>
+            </form>
+
+            <div class="auth-split__divider"><span>или</span></div>
+
+            <p class="auth-split__signup">
+                Нет аккаунта? <a asp-page="/Account/Register">Создать в один шаг</a>
+            </p>
+
+            @if (Model.ShowQuickLogin)
+            {
+                <details class="quick-login auth-split__quick" open>
+                    <summary class="quick-login__summary">
+                        <span class="quick-login__title">Быстрый вход для разработчика</span>
+                        <span class="quick-login__chip">DEV</span>
+                    </summary>
+                    <p class="faint quick-login__hint">Тестовые учётки с паролем <code>Test12345!</code>.</p>
+                    <div class="quick-login__grid">
+                        @foreach (var acc in Model.QuickAccounts)
+                        {
+                            <form method="post" asp-page-handler="Quick" class="quick-login__row">
+                                <input type="hidden" name="email" value="@acc.Email" />
+                                <input asp-for="ReturnUrl" type="hidden" />
+                                <button type="submit" class="quick-login__btn">
+                                    <span class="quick-login__name">@acc.Title</span>
+                                    <span class="quick-login__sub">@acc.Subtitle</span>
+                                    <span class="quick-login__email">@acc.Email</span>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </details>
+            }
+        </div>
     </div>
 </section>

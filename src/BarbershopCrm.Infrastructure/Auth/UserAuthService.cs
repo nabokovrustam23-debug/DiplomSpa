@@ -213,16 +213,34 @@ public sealed class UserAuthService : IUserAuthService
             new[] { data.LastName, data.FirstName, data.MiddleName }
                 .Where(s => !string.IsNullOrWhiteSpace(s)));
 
+        var shortName = BuildShortName(data.LastName, data.FirstName, data.MiddleName);
+
         return new CurrentUser(
             UserId: data.UserId,
             PersonaId: data.PersonaId,
             Login: data.Login,
             Email: data.Email ?? data.Login,
             FullName: fullName,
+            ShortName: shortName,
             RoleCode: data.RoleCode,
             BranchId: data.BranchId,
             IsEmailConfirmed: data.IsEmailConfirmed,
             SessionId: data.SessionId);
+    }
+
+    private static string BuildShortName(string? lastName, string? firstName, string? middleName)
+    {
+        static string Initial(string? s) =>
+            string.IsNullOrWhiteSpace(s) ? string.Empty : $"{char.ToUpperInvariant(s.TrimStart()[0])}.";
+
+        var last = (lastName ?? string.Empty).Trim();
+        var fi = Initial(firstName);
+        var mi = Initial(middleName);
+        var initials = string.IsNullOrEmpty(mi) ? fi : $"{fi}{mi}";
+        if (string.IsNullOrEmpty(last) && string.IsNullOrEmpty(initials)) return string.Empty;
+        if (string.IsNullOrEmpty(initials)) return last;
+        if (string.IsNullOrEmpty(last)) return initials;
+        return $"{last} {initials}";
     }
 
     public async Task<ConsumeTokenResult> ConfirmEmailAsync(string token, CancellationToken ct = default)

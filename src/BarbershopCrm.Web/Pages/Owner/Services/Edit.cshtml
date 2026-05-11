@@ -44,11 +44,11 @@
             <div class="upload-row">
                 @if (!string.IsNullOrEmpty(Model.Input.ExistingImageUrl))
                 {
-                    <img class="image-thumb" src="@Model.Input.ExistingImageUrl" alt="Текущая фотография услуги" />
+                    <img class="image-thumb image-thumb--capped" src="@Model.Input.ExistingImageUrl" alt="Текущая фотография услуги" />
                 }
                 else
                 {
-                    <div class="image-thumb image-placeholder" aria-hidden="true">фото нет</div>
+                    <div class="image-thumb image-thumb--capped image-placeholder" aria-hidden="true">фото нет</div>
                 }
                 <div class="upload-controls">
                     <input asp-for="Input.ImageFile" type="file" accept="image/jpeg,image/png,image/webp" />

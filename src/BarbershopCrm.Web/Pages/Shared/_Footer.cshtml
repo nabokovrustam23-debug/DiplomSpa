@@ -1,0 +1,82 @@
+@using BarbershopCrm.Domain.Enums
+@using BarbershopCrm.Infrastructure.Data
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext FooterDb
+@inject ICurrentUserAccessor FooterCurrent
+@{
+    var year = DateTime.UtcNow.Year;
+    var current = FooterCurrent.User;
+    var branches = await FooterDb.Branches
+        .AsNoTracking()
+        .Where(b => b.IsActive)
+        .OrderBy(b => b.Name)
+        .Select(b => new { b.BranchId, b.Name, b.Address, b.Phone, b.OpeningTime, b.ClosingTime })
+        .Take(4)
+        .ToListAsync();
+}
+
+<footer class="site-footer" role="contentinfo">
+    <div class="site-footer__inner">
+        <div class="site-footer__col">
+            <div class="site-footer__brand">Тихий час</div>
+            <p class="site-footer__lead">Сеть барбершопов в Краснодаре. Запись онлайн, расписание мастеров и аналитика по сети в одной CRM.</p>
+            <div class="site-footer__socials" aria-label="Социальные сети">
+                <a href="#" rel="noopener" aria-label="Telegram">TG</a>
+                <a href="#" rel="noopener" aria-label="ВКонтакте">VK</a>
+                <a href="#" rel="noopener" aria-label="Instagram">IG</a>
+            </div>
+        </div>
+
+        <div class="site-footer__col">
+            <h4>Навигация</h4>
+            <ul class="site-footer__list">
+                <li><a asp-page="/Index">Главная</a></li>
+                <li><a asp-page="/Branches/Index">Филиалы</a></li>
+                <li><a asp-page="/Services/Index">Услуги</a></li>
+                @if (current is not null && current.RoleCode == RoleCode.Client)
+                {
+                    <li><a asp-page="/BookingFlow/New">Записаться онлайн</a></li>
+                    <li><a asp-page="/Account/Bookings/Index">Мои записи</a></li>
+                }
+                else
+                {
+                    <li><a asp-page="/Lead/Index">Оставить заявку</a></li>
+                }
+                @if (current is null)
+                {
+                    <li><a asp-page="/Account/Login">Вход в кабинет</a></li>
+                }
+            </ul>
+        </div>
+
+        <div class="site-footer__col">
+            <h4>Филиалы</h4>
+            <ul class="site-footer__list">
+                @foreach (var b in branches)
+                {
+                    <li>
+                        <a asp-page="/Branches/Details" asp-route-id="@b.BranchId">@b.Name</a><br />
+                        <span class="muted">@b.Address</span><br />
+                        @if (!string.IsNullOrWhiteSpace(b.Phone))
+                        {
+                            <a class="muted tnum" href="tel:@b.Phone.Replace(" ", "").Replace("(", "").Replace(")", "").Replace("-", "")">@b.Phone</a>
+                            <span class="muted"> · @b.OpeningTime.ToString("HH:mm")–@b.ClosingTime.ToString("HH:mm")</span>
+                        }
+                        else
+                        {
+                            <span class="muted">@b.OpeningTime.ToString("HH:mm")–@b.ClosingTime.ToString("HH:mm")</span>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <div class="site-footer__bottom">
+        <span>© @year «Тихий час» · Краснодар</span>
+        <span class="site-footer__sep">·</span>
+        <a asp-page="/Privacy">Политика обработки персональных данных</a>
+        <span class="site-footer__sep">·</span>
+        <span class="muted">CRM-система (дипломный проект)</span>
+    </div>
+</footer>

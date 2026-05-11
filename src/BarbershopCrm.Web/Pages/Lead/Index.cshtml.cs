@@ -29,10 +29,20 @@ public class IndexModel : AppPageModel
 
     public sealed class InputModel
     {
-        [Required, StringLength(120)] public string Name { get; set; } = string.Empty;
-        [Required, StringLength(20)] public string Phone { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Выберите филиал.")] public int? PreferredBranchId { get; set; }
-        [StringLength(500)] public string? Comment { get; set; }
+        [Required(ErrorMessage = "Укажите имя.")]
+        [StringLength(120, ErrorMessage = "Имя слишком длинное (макс. 120 символов).")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Укажите телефон.")]
+        [StringLength(20, ErrorMessage = "Слишком длинный номер.")]
+        public string Phone { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Выберите филиал.")]
+        public int? PreferredBranchId { get; set; }
+
+        [StringLength(500, ErrorMessage = "Комментарий слишком длинный (макс. 500 символов).")]
+        public string? Comment { get; set; }
+
         public bool ConsentGiven { get; set; }
     }
 

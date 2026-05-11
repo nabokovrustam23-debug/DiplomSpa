@@ -8,13 +8,7 @@
 <partial name="_ManagementTabs" />
 
 <section class="card">
-    <div class="card__header">
-        <h1>Аналитика — @(Model.Snapshot?.BranchName ?? "филиал не задан")</h1>
-        <a asp-page="/Admin/Analytics/Index" asp-page-handler="Export"
-           asp-route-from="@Model.FromValue.ToString("yyyy-MM-dd")"
-           asp-route-to="@Model.ToValue.ToString("yyyy-MM-dd")"
-           class="btn btn--outline">Экспорт CSV</a>
-    </div>
+    <h1>Аналитика — @(Model.Snapshot?.BranchName ?? "филиал не задан")</h1>
 
     @if (Model.AccessError is not null)
     {
@@ -38,6 +32,30 @@
         </form>
     }
 </section>
+
+@if (Model.AccessError is null)
+{
+    <section class="card export-card">
+        <div class="export-card__body">
+            <div class="export-card__icon" aria-hidden="true">⇩</div>
+            <div class="export-card__text">
+                <h2 class="export-card__title">Журнал записей в CSV</h2>
+                <p class="export-card__desc">
+                    Полный список записей за период
+                    <strong>@Model.FromValue.ToString("dd.MM.yyyy") — @Model.ToValue.ToString("dd.MM.yyyy")</strong>:
+                    дата и время, мастер, услуга, клиент, статус, стоимость, итог визита.
+                </p>
+                <p class="export-card__hint muted">
+                    Файл сохраняется в кодировке UTF-8 с BOM и разделителем «;» — Excel в русской локали раскрывает его по колонкам автоматически.
+                </p>
+            </div>
+            <a asp-page="/Admin/Analytics/Index" asp-page-handler="Export"
+               asp-route-from="@Model.FromValue.ToString("yyyy-MM-dd")"
+               asp-route-to="@Model.ToValue.ToString("yyyy-MM-dd")"
+               class="btn btn--primary export-card__btn">Скачать .csv</a>
+        </div>
+    </section>
+}
 
 @if (Model.Snapshot is not null)
 {

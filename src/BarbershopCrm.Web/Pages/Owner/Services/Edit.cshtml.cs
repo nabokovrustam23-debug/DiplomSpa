@@ -93,10 +93,10 @@ public class EditModel : AppPageModel
     public class ServiceEditInput
     {
         [Required(ErrorMessage = "Введите название услуги.")]
-        [StringLength(120, MinimumLength = 2)]
+        [StringLength(120, MinimumLength = 2, ErrorMessage = "Название должно быть от 2 до 120 символов.")]
         public string Name { get; set; } = string.Empty;
 
-        [StringLength(500)]
+        [StringLength(500, ErrorMessage = "Описание слишком длинное (макс. 500 символов).")]
         public string? Description { get; set; }
 
         [Range(15, 480, ErrorMessage = "Длительность от 15 до 480 минут.")]

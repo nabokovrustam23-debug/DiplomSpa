@@ -154,14 +154,14 @@ public class EditModel : AppPageModel
     public class MasterEditInput
     {
         [Required(ErrorMessage = "Введите фамилию.")]
-        [StringLength(60, MinimumLength = 1)]
+        [StringLength(60, MinimumLength = 1, ErrorMessage = "Фамилия должна быть от 1 до 60 символов.")]
         public string LastName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Введите имя.")]
-        [StringLength(60, MinimumLength = 1)]
+        [StringLength(60, MinimumLength = 1, ErrorMessage = "Имя должно быть от 1 до 60 символов.")]
         public string FirstName { get; set; } = string.Empty;
 
-        [StringLength(60)]
+        [StringLength(60, ErrorMessage = "Отчество слишком длинное (макс. 60 символов).")]
         public string? MiddleName { get; set; }
 
         [Required(ErrorMessage = "Введите телефон.")]
@@ -171,7 +171,7 @@ public class EditModel : AppPageModel
         [EmailAddress(ErrorMessage = "Некорректный email.")]
         public string? Email { get; set; }
 
-        [StringLength(2000)]
+        [StringLength(2000, ErrorMessage = "Биография слишком длинная (макс. 2000 символов).")]
         public string? Bio { get; set; }
 
         public bool IsActive { get; set; } = true;

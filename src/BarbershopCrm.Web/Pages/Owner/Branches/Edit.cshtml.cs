@@ -101,18 +101,18 @@ public class EditModel : AppPageModel
     public class BranchEditInput
     {
         [Required(ErrorMessage = "Введите название филиала.")]
-        [StringLength(120, MinimumLength = 2)]
+        [StringLength(120, MinimumLength = 2, ErrorMessage = "Название должно быть от 2 до 120 символов.")]
         public string Name { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Введите адрес.")]
-        [StringLength(300, MinimumLength = 5)]
+        [StringLength(300, MinimumLength = 5, ErrorMessage = "Адрес должен быть от 5 до 300 символов.")]
         public string Address { get; set; } = string.Empty;
 
         [RegularExpression(PhoneValidation.RussianPhonePattern, ErrorMessage = PhoneValidation.ErrorMessage)]
         public string? Phone { get; set; }
 
-        [Range(-90, 90)] public double? Latitude { get; set; }
-        [Range(-180, 180)] public double? Longitude { get; set; }
+        [Range(-90, 90, ErrorMessage = "Широта должна быть от -90 до 90.")] public double? Latitude { get; set; }
+        [Range(-180, 180, ErrorMessage = "Долгота должна быть от -180 до 180.")] public double? Longitude { get; set; }
 
         [Display(Name = "Фото филиала")]
         public IFormFile? ImageFile { get; set; }
@@ -121,10 +121,10 @@ public class EditModel : AppPageModel
 
         public bool RemoveImage { get; set; }
 
-        [Required, RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Время в формате ЧЧ:ММ.")]
+        [Required(ErrorMessage = "Укажите время открытия."), RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Время в формате ЧЧ:ММ.")]
         public string OpeningTime { get; set; } = "10:00";
 
-        [Required, RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Время в формате ЧЧ:ММ.")]
+        [Required(ErrorMessage = "Укажите время закрытия."), RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Время в формате ЧЧ:ММ.")]
         public string ClosingTime { get; set; } = "22:00";
 
         public bool IsActive { get; set; } = true;

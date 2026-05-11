@@ -3,9 +3,9 @@ using BarbershopCrm.Domain.Enums;
 using BarbershopCrm.Infrastructure.Auth;
 using BarbershopCrm.Infrastructure.Bookings;
 using BarbershopCrm.Infrastructure.Data;
+using BarbershopCrm.Infrastructure.Scheduling;
 using BarbershopCrm.Web.Auth;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
@@ -18,55 +18,68 @@ public class NewModel : AppPageModel
     private static readonly Regex PhoneRegex = new(@"^\+?[78][\s\-\(\)]*(\d[\s\-\(\)]*){10}$", RegexOptions.Compiled);
 
     private readonly AppDbContext _db;
+    private readonly ISlotService _slotService;
     private readonly IBookingService _bookings;
 
-    public NewModel(ICurrentUserAccessor cu, AppDbContext db, IBookingService bookings) : base(cu)
+    public NewModel(ICurrentUserAccessor cu, AppDbContext db, ISlotService slotService, IBookingService bookings)
+        : base(cu)
     {
         _db = db;
+        _slotService = slotService;
         _bookings = bookings;
     }
 
-    [BindProperty] public InputModel Input { get; set; } = new();
+    // --- Wizard filter state (preserved across GET reloads) -----------------
+    [BindProperty(SupportsGet = true)] public int? BranchId { get; set; }
+    [BindProperty(SupportsGet = true)] public int? ServiceId { get; set; }
+    [BindProperty(SupportsGet = true)] public int? MasterId { get; set; }
+    [BindProperty(SupportsGet = true)] public string? Date { get; set; }
     [BindProperty(SupportsGet = true)] public int? LeadId { get; set; }
 
-    public List<SelectListItem> Branches { get; private set; } = new();
-    public List<SelectListItem> Services { get; private set; } = new();
-    public List<SelectListItem> Masters { get; private set; } = new();
+    [BindProperty] public ConfirmInput Confirm { get; set; } = new();
+
+    public List<Branch> Branches { get; private set; } = new();
+    public List<Service> Services { get; private set; } = new();
+    public List<MasterRow> Masters { get; private set; } = new();
+    public List<SlotDto> Slots { get; private set; } = new();
+    public DateOnly DateValue { get; private set; }
     public string? LeadHint { get; private set; }
 
-    public sealed class InputModel
+    public sealed record MasterRow(int MasterId, string FullName);
+
+    public sealed class ConfirmInput
     {
-        [Required(ErrorMessage = "Выберите филиал.")]
-        public int? BranchId { get; set; }
+        [Required(ErrorMessage = "Выберите филиал.")] public int BranchId { get; set; }
+        [Required(ErrorMessage = "Выберите услугу.")] public int ServiceId { get; set; }
+        [Required(ErrorMessage = "Выберите мастера.")] public int MasterId { get; set; }
 
-        [Required(ErrorMessage = "Выберите услугу.")]
-        public int? ServiceId { get; set; }
+        [Required(ErrorMessage = "Выберите время.")]
+        public string Slot { get; set; } = string.Empty; // ISO local datetime
 
-        [Required(ErrorMessage = "Выберите мастера.")]
-        public int? MasterId { get; set; }
-
-        [Required(ErrorMessage = "Укажите дату и время.")]
-        public DateTime? StartDateTime { get; set; } = RoundToMinute(DateTime.Now.AddHours(1));
-
-        [Required(ErrorMessage = "Укажите фамилию."), StringLength(80, ErrorMessage = "Фамилия слишком длинная.")]
+        [Required(ErrorMessage = "Укажите фамилию.")]
+        [StringLength(80, ErrorMessage = "Фамилия слишком длинная (макс. 80 символов).")]
         public string LastName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Укажите имя."), StringLength(80, ErrorMessage = "Имя слишком длинное.")]
+        [Required(ErrorMessage = "Укажите имя.")]
+        [StringLength(80, ErrorMessage = "Имя слишком длинное (макс. 80 символов).")]
         public string FirstName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Укажите телефон."), StringLength(20, ErrorMessage = "Слишком длинный номер.")]
+        [Required(ErrorMessage = "Укажите телефон.")]
+        [StringLength(20, ErrorMessage = "Слишком длинный номер.")]
         public string Phone { get; set; } = string.Empty;
 
-        [EmailAddress(ErrorMessage = "Некорректный email."), StringLength(120)]
+        [EmailAddress(ErrorMessage = "Некорректный email.")]
+        [StringLength(120, ErrorMessage = "Email слишком длинный (макс. 120 символов).")]
         public string? Email { get; set; }
     }
-
-    private static DateTime RoundToMinute(DateTime dt) =>
-        new(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, 0, dt.Kind);
 
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
         if (Current is null) return Forbid();
+
+        // Admin always works in own branch — preselect & lock.
+        if (Current.RoleCode == RoleCode.Admin && Current.BranchId.HasValue)
+            BranchId = Current.BranchId.Value;
 
         if (LeadId.HasValue)
         {
@@ -77,29 +90,27 @@ public class NewModel : AppPageModel
                 if (Current.RoleCode == RoleCode.Admin && Current.BranchId.HasValue
                     && lead.PreferredBranchId.HasValue
                     && lead.PreferredBranchId != Current.BranchId)
-                {
                     return Forbid();
-                }
 
                 var parts = (lead.RawName ?? string.Empty).Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length >= 2)
                 {
-                    Input.LastName = parts[0];
-                    Input.FirstName = parts[1];
+                    Confirm.LastName = parts[0];
+                    Confirm.FirstName = parts[1];
                 }
                 else if (parts.Length == 1)
                 {
-                    Input.FirstName = parts[0];
+                    Confirm.FirstName = parts[0];
                 }
-                Input.Phone = lead.RawPhone ?? string.Empty;
-                if (lead.PreferredBranchId.HasValue)
-                    Input.BranchId = lead.PreferredBranchId.Value;
+                Confirm.Phone = lead.RawPhone ?? string.Empty;
+                if (!BranchId.HasValue && lead.PreferredBranchId.HasValue)
+                    BranchId = lead.PreferredBranchId.Value;
 
                 LeadHint = $"Заявка #{lead.LeadId} от {lead.CreatedAt:dd.MM.yyyy HH:mm} — {lead.RawName}, {lead.RawPhone}.";
             }
         }
 
-        await LoadOptionsAsync(ct);
+        await LoadAsync(ct);
         return Page();
     }
 
@@ -107,29 +118,37 @@ public class NewModel : AppPageModel
     {
         if (Current is null) return Forbid();
 
-        if (!PhoneRegex.IsMatch(Input.Phone ?? string.Empty))
-            ModelState.AddModelError(nameof(Input.Phone), "Телефон должен содержать 10–11 цифр в формате +7 или 8.");
+        // Admin always works in own branch.
+        if (Current.RoleCode == RoleCode.Admin && Current.BranchId.HasValue)
+            Confirm.BranchId = Current.BranchId.Value;
 
-        if (Current.RoleCode == RoleCode.Admin && Current.BranchId.HasValue && Input.BranchId != Current.BranchId)
-            ModelState.AddModelError(nameof(Input.BranchId), "Можно создавать запись только в своём филиале.");
+        if (!PhoneRegex.IsMatch(Confirm.Phone ?? string.Empty))
+            ModelState.AddModelError(nameof(Confirm.Phone), "Телефон должен содержать 10–11 цифр в формате +7 или 8.");
+
+        if (Current.RoleCode == RoleCode.Admin && Current.BranchId.HasValue
+            && Confirm.BranchId != Current.BranchId)
+            ModelState.AddModelError(nameof(Confirm.BranchId), "Можно создавать запись только в своём филиале.");
 
         if (!ModelState.IsValid)
-        {
-            await LoadOptionsAsync(ct);
-            return Page();
-        }
+            return await ReturnPage(ct);
 
-        // Find or create persona by phone, then client.
-        var phoneNorm = NormalizePhone(Input.Phone ?? string.Empty);
+        if (!DateTime.TryParse(Confirm.Slot, out var startDt))
+        {
+            ModelState.AddModelError(nameof(Confirm.Slot), "Не удалось распознать выбранный слот.");
+            return await ReturnPage(ct);
+        }
+        startDt = RoundToMinute(startDt);
+
+        var phoneNorm = NormalizePhone(Confirm.Phone ?? string.Empty);
         var persona = await _db.Persona.FirstOrDefaultAsync(p => p.Phone == phoneNorm, ct);
         if (persona is null)
         {
             persona = new Persona
             {
-                LastName = Input.LastName.Trim(),
-                FirstName = Input.FirstName.Trim(),
+                LastName = Confirm.LastName.Trim(),
+                FirstName = Confirm.FirstName.Trim(),
                 Phone = phoneNorm,
-                Email = string.IsNullOrWhiteSpace(Input.Email) ? null : Input.Email.Trim(),
+                Email = string.IsNullOrWhiteSpace(Confirm.Email) ? null : Confirm.Email.Trim(),
             };
             _db.Persona.Add(persona);
             await _db.SaveChangesAsync(ct);
@@ -143,17 +162,13 @@ public class NewModel : AppPageModel
             await _db.SaveChangesAsync(ct);
         }
 
-        // Project stores DateTime as local (no timezone tracking). Use the value as-is, rounded to minute.
-        var startDt = RoundToMinute(Input.StartDateTime!.Value);
-
         var result = await _bookings.CreateAsync(new CreateBookingCommand(
-            client.ClientId, Input.BranchId!.Value, Input.ServiceId!.Value, Input.MasterId!.Value, startDt, BookingSource.Admin), ct);
+            client.ClientId, Confirm.BranchId, Confirm.ServiceId, Confirm.MasterId, startDt, BookingSource.Admin), ct);
 
         if (!result.Success)
         {
             ModelState.AddModelError(string.Empty, result.Message ?? "Не удалось создать запись.");
-            await LoadOptionsAsync(ct);
-            return Page();
+            return await ReturnPage(ct);
         }
 
         if (LeadId.HasValue)
@@ -171,41 +186,61 @@ public class NewModel : AppPageModel
         TempData["Success"] = LeadId.HasValue
             ? "Запись создана, заявка закрыта."
             : "Запись создана.";
-        return RedirectToPage("/Admin/Bookings/Index", new { BranchId = Input.BranchId });
+        return RedirectToPage("/Admin/Bookings/Index", new { BranchId = Confirm.BranchId });
     }
 
-    private async Task LoadOptionsAsync(CancellationToken ct)
+    private async Task<IActionResult> ReturnPage(CancellationToken ct)
+    {
+        // Echo the filters from POST back into the GET state so the wizard re-renders correctly.
+        if (Confirm.BranchId != 0) BranchId = Confirm.BranchId;
+        if (Confirm.ServiceId != 0) ServiceId = Confirm.ServiceId;
+        if (Confirm.MasterId != 0) MasterId = Confirm.MasterId;
+        if (DateTime.TryParse(Confirm.Slot, out var dt))
+            Date = DateOnly.FromDateTime(dt).ToString("yyyy-MM-dd");
+
+        await LoadAsync(ct);
+        return Page();
+    }
+
+    private async Task LoadAsync(CancellationToken ct)
     {
         var branchesQ = _db.Branches.AsNoTracking().Where(b => b.IsActive);
         if (Current!.RoleCode == RoleCode.Admin && Current.BranchId.HasValue)
-        {
             branchesQ = branchesQ.Where(b => b.BranchId == Current.BranchId.Value);
-            if (!Input.BranchId.HasValue || Input.BranchId == 0) Input.BranchId = Current.BranchId.Value;
+
+        Branches = await branchesQ.OrderBy(b => b.Name).ToListAsync(ct);
+
+        if (BranchId.HasValue)
+        {
+            Services = await _db.Services.AsNoTracking()
+                .Where(s => s.IsActive
+                    && _db.MasterServices.Any(ms => ms.ServiceId == s.ServiceId
+                        && _db.Masters.Any(m => m.MasterId == ms.MasterId
+                            && m.IsActive && m.BranchId == BranchId.Value)))
+                .OrderBy(s => s.Name).ToListAsync(ct);
         }
 
-        Branches = await branchesQ.OrderBy(b => b.Name)
-            .Select(b => new SelectListItem(b.Name, b.BranchId.ToString()))
-            .ToListAsync(ct);
-
-        Services = await _db.Services.AsNoTracking()
-            .Where(s => s.IsActive)
-            .OrderBy(s => s.Name)
-            .Select(s => new SelectListItem($"{s.Name} ({s.DurationMinutes} мин · {s.Price:0} ₽)", s.ServiceId.ToString()))
-            .ToListAsync(ct);
-
-        if (Input.BranchId.HasValue && Input.BranchId.Value > 0)
+        if (BranchId.HasValue && ServiceId.HasValue)
         {
-            var bid = Input.BranchId.Value;
-            var sid = Input.ServiceId ?? 0;
             Masters = await _db.Masters.AsNoTracking()
-                .Where(m => m.IsActive && m.BranchId == bid
-                    && (sid == 0 || m.MasterServices.Any(ms => ms.ServiceId == sid)))
+                .Where(m => m.IsActive && m.BranchId == BranchId
+                    && m.MasterServices.Any(ms => ms.ServiceId == ServiceId))
                 .Include(m => m.Persona)
                 .OrderBy(m => m.Persona.LastName)
-                .Select(m => new SelectListItem(m.Persona.LastName + " " + m.Persona.FirstName, m.MasterId.ToString()))
+                .Select(m => new MasterRow(m.MasterId, m.Persona.LastName + " " + m.Persona.FirstName))
                 .ToListAsync(ct);
+
+            DateValue = !string.IsNullOrWhiteSpace(Date) && DateOnly.TryParse(Date, out var d)
+                ? d : DateOnly.FromDateTime(DateTime.Today);
+
+            Slots = (await _slotService.GetFreeSlotsAsync(BranchId.Value, ServiceId.Value, DateValue, MasterId, ct))
+                .Where(s => s.StartDateTime > DateTime.Now.AddMinutes(-30)) // admin может бронировать «прямо сейчас»
+                .ToList();
         }
     }
+
+    private static DateTime RoundToMinute(DateTime dt) =>
+        new(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, 0, dt.Kind);
 
     private static string NormalizePhone(string phone)
     {

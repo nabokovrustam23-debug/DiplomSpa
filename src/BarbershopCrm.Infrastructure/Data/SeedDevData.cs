@@ -188,7 +188,23 @@ public static class SeedDevData
     {
         if (await db.WorkSchedules.AnyAsync(ct))
         {
-            logger.LogInformation("SeedDevData: schedules already present, skipping");
+            // Backfill: расширяем смену до 22:00, чтобы слоты были видны весь рабочий день филиала.
+            // Это безопасно: для старых демо-данных смена была 10:00-20:00, что обрезало слоты до 19:00 для услуг по 60 минут.
+            var oldEnd = new TimeOnly(20, 0);
+            var newEnd = new TimeOnly(22, 0);
+            var oldShifts = await db.WorkSchedules
+                .Where(w => w.ScheduleType == ScheduleType.Work && w.EndTime == oldEnd && w.StartTime == new TimeOnly(10, 0))
+                .ToListAsync(ct);
+            if (oldShifts.Count > 0)
+            {
+                foreach (var s in oldShifts) s.EndTime = newEnd;
+                await db.SaveChangesAsync(ct);
+                logger.LogInformation("SeedDevData: extended {Count} legacy 10:00-20:00 shifts to 22:00", oldShifts.Count);
+            }
+            else
+            {
+                logger.LogInformation("SeedDevData: schedules already present, skipping");
+            }
             return;
         }
 
@@ -203,9 +219,10 @@ public static class SeedDevData
         var start = today.AddDays(-7);
         var end = today.AddDays(14);
 
-        // Standard shift 10:00..20:00 with lunch 14:00..15:00, days off Sundays.
+        // Standard shift 10:00..22:00 (= branch hours) with lunch 14:00..15:00, days off Sundays.
+        // Совпадает с часами работы филиала, чтобы клиент видел слоты до позднего вечера.
         var shiftStart = new TimeOnly(10, 0);
-        var shiftEnd = new TimeOnly(20, 0);
+        var shiftEnd = new TimeOnly(22, 0);
         var lunchStart = new TimeOnly(14, 0);
         var lunchEnd = new TimeOnly(15, 0);
 

@@ -41,9 +41,15 @@ public class BookingsModel : AppPageModel
 
     public sealed class CompleteInput
     {
-        [Required] public int BookingId { get; set; }
-        [Required, Range(0, 1_000_000)] public decimal TotalAmount { get; set; }
-        [StringLength(500)] public string? MasterNotes { get; set; }
+        [Required(ErrorMessage = "Не указана запись.")]
+        public int BookingId { get; set; }
+
+        [Required(ErrorMessage = "Укажите сумму.")]
+        [Range(0, 1_000_000, ErrorMessage = "Сумма должна быть от 0 до 1 000 000.")]
+        public decimal TotalAmount { get; set; }
+
+        [StringLength(500, ErrorMessage = "Комментарий слишком длинный (макс. 500 символов).")]
+        public string? MasterNotes { get; set; }
     }
 
     public sealed record TimelineHour(TimeOnly Time, int RowIndex);

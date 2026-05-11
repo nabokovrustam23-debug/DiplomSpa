@@ -2022,3 +2022,33 @@ textarea:focus-visible {
 .timeline-edit-hint { margin-top: var(--space-3); }
 .timeline-edit-hint a { color: var(--color-accent); text-decoration: none; }
 .timeline-edit-hint a:hover { text-decoration: underline; }
+
+/* ---------- Analytics export card ---------- */
+.export-card {
+    border: 1px solid color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+    background: color-mix(in srgb, var(--color-accent) 5%, var(--color-surface));
+}
+.export-card__body {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--space-4);
+}
+.export-card__icon {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+    color: var(--color-accent);
+    font-size: 22px; font-weight: 700;
+    line-height: 1;
+}
+.export-card__title { margin: 0 0 var(--space-1); font-size: 18px; }
+.export-card__desc { margin: 0 0 4px; }
+.export-card__hint { margin: 0; font-size: 13px; }
+.export-card__btn { white-space: nowrap; }
+@media (max-width: 700px) {
+    .export-card__body { grid-template-columns: 1fr; }
+    .export-card__icon { display: none; }
+    .export-card__btn { width: 100%; text-align: center; }
+}

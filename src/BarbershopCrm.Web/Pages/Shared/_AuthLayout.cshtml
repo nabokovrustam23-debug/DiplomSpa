@@ -1,0 +1,44 @@
+@{
+    var theme = Context.Request.Cookies["theme"];
+    if (theme != "light" && theme != "dark") theme = "dark";
+}
+<!DOCTYPE html>
+<html lang="ru" data-theme="@theme">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] ?? "Тихий час") · CRM</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="auth-body">
+    <a class="skip-link" href="#main-content">Перейти к содержимому</a>
+    <main id="main-content" tabindex="-1">
+        @{
+            var successMsg = TempData["Success"] as string;
+            var errorMsg = TempData["Error"] as string;
+        }
+        @if (!string.IsNullOrEmpty(successMsg))
+        {
+            <div class="toast toast--success" role="status" aria-live="polite">
+                <span class="toast__icon" aria-hidden="true">✓</span>
+                <span class="toast__text">@successMsg</span>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(errorMsg))
+        {
+            <div class="toast toast--error" role="alert" aria-live="assertive">
+                <span class="toast__icon" aria-hidden="true">!</span>
+                <span class="toast__text">@errorMsg</span>
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

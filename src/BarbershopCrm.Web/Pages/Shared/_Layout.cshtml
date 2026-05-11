@@ -55,8 +55,7 @@
                     }
                     else if (current is not null && current.RoleCode == RoleCode.Master)
                     {
-                        <a asp-page="/MasterArea/Schedule" class="nav-manage">Расписание</a>
-                        <a asp-page="/MasterArea/Bookings" class="nav-manage">Записи</a>
+                        <a asp-page="/MasterArea/Bookings" class="nav-manage">Расписание</a>
                     }
 
                     @if (current is null)
@@ -68,8 +67,8 @@
                         <a asp-page="/Account/Notifications/Index" class="nav-bell" title="Мои уведомления">
                             Уведомления
                         </a>
-                        <a asp-page="/Profile/Index" class="user-pill" title="@current.RoleCode">
-                            @current.FullName
+                        <a asp-page="/Profile/Index" class="user-pill" title="@current.FullName · @current.RoleCode">
+                            @(string.IsNullOrEmpty(current.ShortName) ? current.FullName : current.ShortName)
                         </a>
                         <form method="post" asp-page="/Account/Logout" class="logout-form">
                             <button type="submit" class="btn-link">Выход</button>
@@ -109,9 +108,7 @@
             @RenderBody()
         </main>
 
-        <footer class="app-footer">
-            © @DateTime.UtcNow.Year · «Тихий час» · Краснодар · CRM-система (диплом)
-        </footer>
+        <partial name="_Footer" />
     </div>
 
     @await RenderSectionAsync("Scripts", required: false)

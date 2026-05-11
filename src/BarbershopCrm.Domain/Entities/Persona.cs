@@ -18,4 +18,28 @@ public class Persona
     public string FullName => string.IsNullOrWhiteSpace(MiddleName)
         ? $"{LastName} {FirstName}"
         : $"{LastName} {FirstName} {MiddleName}";
+
+    /// <summary>Фамилия + инициалы: «Иванов И.С.» / «Иванов И.» при отсутствии отчества.</summary>
+    public string ShortName
+    {
+        get
+        {
+            var last = (LastName ?? string.Empty).Trim();
+            var fi = FirstInitial(FirstName);
+            var mi = FirstInitial(MiddleName);
+
+            if (string.IsNullOrEmpty(last) && string.IsNullOrEmpty(fi))
+                return string.Empty;
+
+            var initials = string.IsNullOrEmpty(mi) ? fi : $"{fi}{mi}";
+            return string.IsNullOrEmpty(initials) ? last : $"{last} {initials}".Trim();
+        }
+    }
+
+    private static string FirstInitial(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+        var ch = value.TrimStart()[0];
+        return $"{char.ToUpperInvariant(ch)}.";
+    }
 }

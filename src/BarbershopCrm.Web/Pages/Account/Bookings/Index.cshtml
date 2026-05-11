@@ -1,4 +1,5 @@
 @page "/Account/Bookings"
+@using BarbershopCrm.Domain.Enums
 @model BarbershopCrm.Web.Pages.Account.Bookings.IndexModel
 @{
     ViewData["Title"] = "Мои записи";
@@ -32,8 +33,8 @@
                     <td>@b.StartDateTime.ToString("dd.MM.yyyy HH:mm")</td>
                     <td>@b.Branch.Name</td>
                     <td>@b.Service.Name</td>
-                    <td>@b.Master.Persona.LastName @b.Master.Persona.FirstName</td>
-                    <td><span class="badge badge--@b.Status.ToLowerInvariant()">@b.Status</span></td>
+                    <td>@b.Master.Persona.ShortName</td>
+                    <td><span class="badge badge--@b.Status.ToLowerInvariant()">@StatusLabels.BookingStatus(b.Status)</span></td>
                     <td>
                         @if (canCancel)
                         {
@@ -70,8 +71,8 @@
                     <td>@b.StartDateTime.ToString("dd.MM.yyyy HH:mm")</td>
                     <td>@b.Branch.Name</td>
                     <td>@b.Service.Name</td>
-                    <td>@b.Master.Persona.LastName @b.Master.Persona.FirstName</td>
-                    <td><span class="badge badge--@b.Status.ToLowerInvariant()">@b.Status</span></td>
+                    <td>@b.Master.Persona.ShortName</td>
+                    <td><span class="badge badge--@b.Status.ToLowerInvariant()">@StatusLabels.BookingStatus(b.Status)</span></td>
                 </tr>
             }
             </tbody>

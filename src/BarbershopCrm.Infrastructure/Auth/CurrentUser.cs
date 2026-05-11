@@ -9,6 +9,7 @@ public sealed record CurrentUser(
     string Login,
     string Email,
     string FullName,
+    string ShortName,
     string RoleCode,
     int? BranchId,
     bool IsEmailConfirmed,

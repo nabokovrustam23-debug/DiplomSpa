@@ -4,26 +4,53 @@
     ViewData["Title"] = "Главная";
 }
 
-<section class="hero">
-    <h1>Тихий час</h1>
-    <p>Сеть барбершопов в Краснодаре. CRM-система управляет филиалами, расписанием мастеров, онлайн-записью клиентов и аналитикой по сети.</p>
-    @if (Model.IsAuthenticated && Model.Current?.RoleCode == RoleCode.Client)
-    {
-        <a class="btn btn--soft" asp-page="/BookingFlow/New">Записаться онлайн</a>
-    }
-    else
-    {
-        <a class="btn btn--soft" asp-page="/Lead/Index">Оставить заявку</a>
-    }
-    @if (User.Identity?.IsAuthenticated != true)
-    {
-        <a class="btn btn--ghost" asp-page="/Account/Login" style="margin-left: var(--space-3)">Войти в кабинет</a>
-    }
+<section class="hero hero--home">
+    <div class="hero__inner">
+        <p class="hero__eyebrow">Барбершоп · Краснодар</p>
+        <h1 class="hero__title">Тихий час</h1>
+        <p class="hero__lead">Спокойное место для классической мужской стрижки. Опытные мастера, отлаженное расписание, понятные цены и онлайн-запись за минуту.</p>
+        <div class="hero__cta">
+            @if (Model.IsAuthenticated && Model.Current?.RoleCode == RoleCode.Client)
+            {
+                <a class="btn btn--soft" asp-page="/BookingFlow/New">Записаться онлайн</a>
+            }
+            else
+            {
+                <a class="btn btn--soft" asp-page="/Lead/Index">Оставить заявку</a>
+            }
+            <a class="btn btn--ghost" asp-page="/Services/Index">Прайс-лист</a>
+            @if (!Model.IsAuthenticated)
+            {
+                <a class="btn btn--ghost" asp-page="/Account/Login">Войти в кабинет</a>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <article class="feature">
+        <div class="feature__icon" aria-hidden="true">⏱</div>
+        <h3>Запись за минуту</h3>
+        <p class="muted">Выбираете услугу, мастера и удобный слот. Подтверждение приходит на email и в кабинет.</p>
+    </article>
+    <article class="feature">
+        <div class="feature__icon" aria-hidden="true">✂</div>
+        <h3>Опытные мастера</h3>
+        <p class="muted">Команда барберов с многолетним стажем — классические стрижки, бритьё, оформление бороды.</p>
+    </article>
+    <article class="feature">
+        <div class="feature__icon" aria-hidden="true">⚑</div>
+        <h3>Два филиала</h3>
+        <p class="muted">Центр и Фестивальный. Единый прайс, одинаковое качество и часы работы.</p>
+    </article>
 </section>
 
 <div class="divider"></div>
 
-<h2>Филиалы</h2>
+<header class="section-header">
+    <h2>Филиалы</h2>
+    <a class="link-more" asp-page="/Branches/Index">Все филиалы →</a>
+</header>
 <p class="muted">Два барбершопа в Краснодаре, одинаковый прайс, общие правила работы.</p>
 
 <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: var(--space-4);">
@@ -51,11 +78,14 @@
 
 <div class="divider"></div>
 
-<h2>Услуги</h2>
-<p class="muted">Прайс на всю сеть. Длительность — для расчёта свободных слотов в шаге 15 минут.</p>
+<header class="section-header">
+    <h2>Услуги</h2>
+    <a class="link-more" asp-page="/Services/Index">Весь прайс →</a>
+</header>
+<p class="muted">Несколько популярных позиций. Полный прайс с фильтрами — в разделе «Услуги».</p>
 
 <div class="grid-3" style="margin-top: var(--space-4);">
-    @foreach (var service in Model.Services)
+    @foreach (var service in Model.Services.Take(6))
     {
         <article class="card service-card">
             @if (!string.IsNullOrEmpty(service.ImageUrl))
@@ -72,4 +102,3 @@
         </article>
     }
 </div>
-

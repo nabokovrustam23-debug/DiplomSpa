@@ -31,7 +31,7 @@ public class IndexModel : AppPageModel
     {
         [Required, StringLength(120)] public string Name { get; set; } = string.Empty;
         [Required, StringLength(20)] public string Phone { get; set; } = string.Empty;
-        public int? PreferredBranchId { get; set; }
+        [Required(ErrorMessage = "Выберите филиал.")] public int? PreferredBranchId { get; set; }
         [StringLength(500)] public string? Comment { get; set; }
         public bool ConsentGiven { get; set; }
     }

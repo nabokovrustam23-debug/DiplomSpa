@@ -11,9 +11,18 @@
     <h1>Создать запись вручную</h1>
     <p class="muted">Используйте при оформлении по звонку. Источник записи будет «Admin».</p>
 
+    @if (!string.IsNullOrEmpty(Model.LeadHint))
+    {
+        <div class="alert alert--info">@Model.LeadHint</div>
+    }
+
     <div asp-validation-summary="All" class="alert alert--error"></div>
 
     <form method="post" data-busy class="form-grid">
+        @if (Model.LeadId.HasValue)
+        {
+            <input type="hidden" name="LeadId" value="@Model.LeadId" />
+        }
         <div class="form-group">
             <label asp-for="Input.BranchId">Филиал</label>
             <select asp-for="Input.BranchId" asp-items="Model.Branches" class="input">
